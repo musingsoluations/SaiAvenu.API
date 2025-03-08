@@ -9,6 +9,9 @@ COPY SriSai.Domain/SriSai.Domain.csproj SriSai.Domain/
 COPY SriSai.infrastructure/SriSai.infrastructure.csproj SriSai.infrastructure/
 RUN dotnet restore "SriSai.API/SriSai.API.csproj"
 
+# **Explicitly copy appsettings.json before changing WORKDIR**
+COPY SriSai.API/appsettings.json SriSai.API/
+
 # Copy the entire project source code
 COPY . .
 
