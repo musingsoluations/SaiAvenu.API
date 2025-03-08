@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image CI and AKS Deployment
 
 on:
   push:
@@ -7,14 +7,13 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Login to Azure Container Registry
       uses: docker/login-action@v3
       with:
@@ -29,4 +28,41 @@ jobs:
       run: |
         docker buildx build --push \
           --tag musing.azurecr.io/sai-avenu-api:latest \
-          --file Dockerfile .
+          --file Dockerfile . \
+          --build-arg CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
+          --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+          --build-arg JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
+          --build-arg JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}"
+
+  deploy:
+    needs: build  # Ensures deployment runs only after a successful build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}  # Store this in GitHub secrets
+
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
+
+    - name: Create Kubernetes secrets (if not exists)
+      run: |
+        kubectl create secret generic api-secrets --dry-run=client -o yaml \
+          --from-literal=CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
+          --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+          --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
+          --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
+
+    - name: Deploy to AKS
+      run: |
+        kubectl apply -f deployment.yaml
+
+    - name: Verify Deployment
+      run: |
+        kubectl rollout status deployment sai-avenu-api

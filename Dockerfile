@@ -7,6 +7,9 @@ COPY SriSai.Domain/SriSai.Domain.csproj SriSai.Domain/
 COPY SriSai.infrastructure/SriSai.infrastructure.csproj SriSai.infrastructure/
 RUN dotnet restore "SriSai.API/SriSai.API.csproj"
 
+ARG CONNECTION_STRING
+RUN sed -i "s|#\{CONNECTION_STRING\}#|$CONNECTION_STRING|g" SriSai.API/appsettings.json
+
 COPY . .
 WORKDIR "/src/SriSai.API"
 RUN dotnet build "SriSai.API.csproj" -c Release -o /app/build
