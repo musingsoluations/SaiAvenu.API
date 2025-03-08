@@ -10,7 +10,8 @@ COPY SriSai.infrastructure/SriSai.infrastructure.csproj SriSai.infrastructure/
 RUN dotnet restore "SriSai.API/SriSai.API.csproj"
 
 # **Explicitly copy appsettings.json before changing WORKDIR**
-COPY SriSai.API/appsettings.json SriSai.API/
+# Ensure appsettings.json is copied to the right place
+COPY SriSai.API/appsettings.json /src/SriSai.API/appsettings.json
 
 # Copy the entire project source code
 COPY . .
@@ -19,7 +20,7 @@ COPY . .
 WORKDIR "/src/SriSai.API"
 
 # Verify if the file exists (for debugging)
-RUN ls -l appsettings.json || echo "appsettings.json NOT FOUND"
+RUN ls -l /src/SriSai.API/appsettings.json || echo "appsettings.json NOT FOUND"
 
 # Define all environment variables
 ARG CONNECTION_STRING
