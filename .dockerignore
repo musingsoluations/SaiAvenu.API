@@ -1,0 +1,13 @@
+**/.DS_Store
+**/bin/
+**/obj/
+.env
+docker-compose*
+Dockerfile*
+.git
+.gitignore
+.vscode/
+.idea/
+*.userprefs
+*.swp
+*.swo
