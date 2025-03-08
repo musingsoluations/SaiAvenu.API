@@ -35,11 +35,11 @@ RUN echo "CONNECTION_STRING=$CONNECTION_STRING" && \
     echo "JWT_AUDIENCE=$JWT_AUDIENCE"
 
 # Safely replace placeholders in appsettings.json
-RUN test -f appsettings.json && \
-    sed -i "s@#{CONNECTION_STRING}#@$CONNECTION_STRING@g" appsettings.json && \
-    sed -i "s@#{JWT_SECRET}#@$JWT_SECRET@g" appsettings.json && \
-    sed -i "s@#{JWT_ISSUER}#@$JWT_ISSUER@g" appsettings.json && \
-    sed -i "s@#{JWT_AUDIENCE}#@$JWT_AUDIENCE@g" appsettings.json || \
+RUN test -f /src/SriSai.API/appsettings.json && \
+    sed -i -E "s@#{CONNECTION_STRING}#@$(printf '%s\n' "$CONNECTION_STRING" | sed 's/[&/\]/\\&/g')@g" /src/SriSai.API/appsettings.json && \
+    sed -i -E "s@#{JWT_SECRET}#@$(printf '%s\n' "$JWT_SECRET" | sed 's/[&/\]/\\&/g')@g" /src/SriSai.API/appsettings.json && \
+    sed -i -E "s@#{JWT_ISSUER}#@$(printf '%s\n' "$JWT_ISSUER" | sed 's/[&/\]/\\&/g')@g" /src/SriSai.API/appsettings.json && \
+    sed -i -E "s@#{JWT_AUDIENCE}#@$(printf '%s\n' "$JWT_AUDIENCE" | sed 's/[&/\]/\\&/g')@g" /src/SriSai.API/appsettings.json" || \
     echo "appsettings.json NOT FOUND - Skipping sed replacements"
 
 # Build the application
