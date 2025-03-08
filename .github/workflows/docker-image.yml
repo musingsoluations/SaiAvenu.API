@@ -25,6 +25,11 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Build and push Docker image
+      env:
+        CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+        JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
       run: |
         docker buildx build --push \
           --tag musing.azurecr.io/sai-avenu-api:latest \
@@ -47,9 +52,16 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}  # Store this in GitHub secrets
 
+    - name: Install kubelogin (required for AAD authentication)
+      run: |
+        curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+        unzip kubelogin-linux-amd64.zip
+        sudo mv kubelogin /usr/local/bin/
+
     - name: Get AKS credentials
       run: |
         az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
+        kubelogin convert-kubeconfig -l azurecli
 
     - name: Create Kubernetes secrets (if not exists)
       run: |
