@@ -1,11 +1,22 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
+
+# Copy the necessary project files for dependency resolution
 COPY SriSai.API/SriSai.API.csproj SriSai.API/
 COPY SriSai.Application/SriSai.Application.csproj SriSai.Application/
 COPY SriSai.Domain/SriSai.Domain.csproj SriSai.Domain/
 COPY SriSai.infrastructure/SriSai.infrastructure.csproj SriSai.infrastructure/
 RUN dotnet restore "SriSai.API/SriSai.API.csproj"
+
+# Copy the entire project source code
+COPY . .
+
+# Ensure appsettings.json is copied before modifying it
+WORKDIR "/src/SriSai.API"
+
+# Verify if the file exists (for debugging)
+RUN ls -l appsettings.json || echo "appsettings.json NOT FOUND"
 
 # Define all environment variables
 ARG CONNECTION_STRING
@@ -20,23 +31,12 @@ RUN echo "CONNECTION_STRING=$CONNECTION_STRING" && \
     echo "JWT_AUDIENCE=$JWT_AUDIENCE"
 
 # Safely replace placeholders in appsettings.json
-RUN sed -i "s@#{CONNECTION_STRING}#@$CONNECTION_STRING@g" SriSai.API/appsettings.json && \
-    sed -i "s@#{JWT_SECRET}#@$JWT_SECRET@g" SriSai.API/appsettings.json && \
-    sed -i "s@#{JWT_ISSUER}#@$JWT_ISSUER@g" SriSai.API/appsettings.json && \
-    sed -i "s@#{JWT_AUDIENCE}#@$JWT_AUDIENCE@g" SriSai.API/appsettings.json
+RUN test -f appsettings.json && \
+    sed -i "s@#{CONNECTION_STRING}#@$CONNECTION_STRING@g" appsettings.json && \
+    sed -i "s@#{JWT_SECRET}#@$JWT_SECRET@g" appsettings.json && \
+    sed -i "s@#{JWT_ISSUER}#@$JWT_ISSUER@g" appsettings.json && \
+    sed -i "s@#{JWT_AUDIENCE}#@$JWT_AUDIENCE@g" appsettings.json || \
+    echo "appsettings.json NOT FOUND - Skipping sed replacements"
 
-COPY . .
-WORKDIR "/src/SriSai.API"
+# Build the application
 RUN dotnet build "SriSai.API.csproj" -c Release -o /app/build
-
-# Publish stage
-FROM build AS publish
-RUN dotnet publish "SriSai.API.csproj" -c Release -o /app/publish
-
-# Final stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
-WORKDIR /app
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SriSai.API.dll"]
