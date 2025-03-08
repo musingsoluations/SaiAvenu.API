@@ -29,10 +29,10 @@ jobs:
         docker buildx build --push \
           --tag musing.azurecr.io/sai-avenu-api:latest \
           --file Dockerfile . \
-          --build-arg CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
-          --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-          --build-arg JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
-          --build-arg JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}"
+          --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
+          --build-arg JWT_SECRET="$JWT_SECRET" \
+          --build-arg JWT_ISSUER="$JWT_ISSUER" \
+          --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
 
   deploy:
     needs: build  # Ensures deployment runs only after a successful build
