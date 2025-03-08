@@ -74,7 +74,8 @@ jobs:
 
     - name: Deploy to AKS
       run: |
-        kubectl apply -f /k8s/deployment.yaml
+        kubectl apply -f k8s/deployment.yaml
+        ls -l
 
     - name: Verify Deployment
       run: |
