@@ -77,7 +77,8 @@ jobs:
             --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
 
       - name: Debug - Print IMAGE_TAG
-        run: echo "IMAGE_TAG is: ${{ needs.build.outputs.IMAGE_TAG }}"
+        run: |
+          echo "IMAGE_TAG is: ${{ needs.build.outputs.IMAGE_TAG }}"
 
       - name: Set image in deployment
         run: |
