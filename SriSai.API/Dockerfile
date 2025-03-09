@@ -34,7 +34,7 @@ RUN test -f appsettings.json && \
     /src/SriSai.API/appsettings.json || \
     echo "appsettings.json NOT FOUND - Skipping sed replacements"
 
-RUN CAT appsettings.json
+RUN cat appsettings.json
 
 RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
