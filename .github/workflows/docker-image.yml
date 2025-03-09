@@ -9,8 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      IMAGE_TAG: ${{ steps.build-image.outputs.IMAGE_TAG }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,33 +25,24 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push Docker image
-        id: build-image
         env:
           CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
           JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
         run: |
-          # Corrected image name with proper 'avenue' spelling
-          IMAGE_TAG="musing.azurecr.io/sai-avenue-api:${GITHUB_SHA}"
-          
-          echo "Building image: $IMAGE_TAG"  # Debug output
-          
           docker buildx build --push \
-            --tag "$IMAGE_TAG" \
+            --tag musing.azurecr.io/sai-avenue-api:latest \
             --file SriSai.API/Dockerfile . \
             --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
             --build-arg JWT_SECRET="$JWT_SECRET" \
             --build-arg JWT_ISSUER="$JWT_ISSUER" \
             --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
-          
-          # Set output with proper formatting
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "Image tag set to: $(cat $GITHUB_OUTPUT)"  # Verify output
 
   deploy:
-    needs: build
+    needs: build  # Ensures deployment runs only after a successful build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -60,9 +50,9 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Store this in GitHub secrets
 
-      - name: Install kubelogin
+      - name: Install kubelogin (required for AAD authentication)
         run: |
           curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
           unzip kubelogin-linux-amd64.zip
@@ -74,7 +64,7 @@ jobs:
           az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
           kubelogin convert-kubeconfig -l azurecli
 
-      - name: Create Kubernetes secrets
+      - name: Create Kubernetes secrets (if not exists)
         run: |
           kubectl create secret generic api-secrets --dry-run=client -o yaml \
             --from-literal=CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
@@ -82,23 +72,15 @@ jobs:
             --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
             --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
 
-      - name: Verify IMAGE_TAG availability
+      - name: Deploy to AKS
         run: |
-          echo "Deploying image: ${{ needs.build.outputs.IMAGE_TAG }}"
-          if [ -z "${{ needs.build.outputs.IMAGE_TAG }}" ]; then
-            echo "ERROR: IMAGE_TAG is empty!"
-            exit 1
-          fi
+          kubectl apply -f k8s/deployment.yaml
+          ls -l
 
-      - name: Update deployment image
+      - name: updating deployment
         run: |
-          # Command structure: kubectl set image deployment/[DEPLOYMENT_NAME] [CONTAINER_NAME]=[IMAGE_TAG]
-          kubectl set image deployment/sai-avenue-api \
-            sai-avenue-api=${{ needs.build.outputs.IMAGE_TAG }} \
-            --record=true
+          kubectl rollout restart deployment sai-avenue-api
 
-      - name: Verify deployment
+      - name: Verify Deployment
         run: |
-          kubectl rollout status deployment/sai-avenue-api
-          kubectl get deployments -o wide
-          echo "Deployment update complete!"
+          kubectl rollout status deployment sai-avenue-api
