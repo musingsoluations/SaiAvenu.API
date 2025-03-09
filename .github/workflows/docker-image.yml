@@ -31,13 +31,15 @@ jobs:
         JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
         JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
       run: |
+        IMAGE_TAG=musing.azurecr.io/sai-avenu-api:${GITHUB_SHA}
         docker buildx build --push \
-          --tag musing.azurecr.io/sai-avenu-api:latest \
+          --tag $IMAGE_TAG \
           --file SriSai.API/Dockerfile . \
           --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
           --build-arg JWT_SECRET="$JWT_SECRET" \
           --build-arg JWT_ISSUER="$JWT_ISSUER" \
           --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
   deploy:
     needs: build  # Ensures deployment runs only after a successful build
@@ -71,16 +73,13 @@ jobs:
           --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
           --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
           --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
-
-    - name: Deploy to AKS
+    - name: Set image in deployment
+      run: |
+        kubectl set image deployment/sai-avenue-api sai-avenue-api=${IMAGE_TAG} --record
+    - name: Start Deployment
       run: |
         kubectl apply -f k8s/deployment.yaml
         ls -l
-        
-    - name: updating deployment
-      run: |
-        kubectl rollout restart deployment sai-avenu-api
-
     - name: Verify Deployment
       run: |
         kubectl rollout status deployment sai-avenu-api
