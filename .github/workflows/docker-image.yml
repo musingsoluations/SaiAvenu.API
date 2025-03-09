@@ -1,3 +1,9 @@
+name: Build and Deploy Docker Image
+
+on:
+  push:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,12 +35,12 @@ jobs:
           echo "IMAGE_TAG is: $IMAGE_TAG"
           docker buildx build --push \
             --tag "$IMAGE_TAG" \
-            --file SriSai.API/Dockerfile . \
+            --file SriSai.API/Dockerfile \
             --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
             --build-arg JWT_SECRET="$JWT_SECRET" \
             --build-arg JWT_ISSUER="$JWT_ISSUER" \
-            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
-          echo "IMAGE_TAG=\"$IMAGE_TAG\"" >> $GITHUB_OUTPUT
+            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE" .
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   deploy:
     needs: build
