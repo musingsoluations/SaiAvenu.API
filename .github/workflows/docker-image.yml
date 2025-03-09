@@ -48,17 +48,31 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Login to Azure
+        
+      - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }}  # Store this in GitHub secrets
+                  - name: Install kubelogin (required for AAD authentication)
+                    run: |
+                      curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+                      unzip kubelogin-linux-amd64.zip
+                      sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
+                      chmod +x /usr/local/bin/kubelogin
 
-      - name: Get AKS credentials
-        run: |
-          az aks get-credentials \
-            --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
-            --name ${{ secrets.AKS_CLUSTER_NAME }} \
-            --overwrite-existing
+                  - name: Get AKS credentials
+                    run: |
+                      az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
+                      kubelogin convert-kubeconfig -l azurecli
+
+                  - name: Create Kubernetes secrets (if not exists)
+                    run: |
+                      kubectl create secret generic api-secrets --dry-run=client -o yaml \
+                        --from-literal=CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
+                        --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+                        --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
+                        --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
+          
       - name: Debug - Print IMAGE_TAG
         run: |
           echo "IMAGE_TAG is: '${{ needs.build.outputs.IMAGE_TAG }}'"
