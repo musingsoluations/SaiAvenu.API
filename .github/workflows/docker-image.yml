@@ -33,7 +33,7 @@ jobs:
       run: |
         docker buildx build --push \
           --tag musing.azurecr.io/sai-avenu-api:latest \
-          --file Dockerfile . \
+          --file SriSai.API/Dockerfil . \
           --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
           --build-arg JWT_SECRET="$JWT_SECRET" \
           --build-arg JWT_ISSUER="$JWT_ISSUER" \
