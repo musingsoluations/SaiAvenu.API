@@ -1,14 +1,15 @@
-name: Build and Deploy Docker Image
+name: Docker Image CI and AKS Deployment
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      IMAGE_TAG: ${{ steps.build-image.outputs.IMAGE_TAG }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,69 +25,62 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push Docker image
-        id: build-image
         env:
           CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
           JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
         run: |
-          IMAGE_TAG="musing.azurecr.io/sai-avenu-api:${{ github.sha }}"
-          echo "IMAGE_TAG is: $IMAGE_TAG"
           docker buildx build --push \
-            --tag "$IMAGE_TAG" \
-            --file SriSai.API/Dockerfile \
+            --tag musing.azurecr.io/sai-avenu-api:latest \
+            --file SriSai.API/Dockerfile . \
             --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
             --build-arg JWT_SECRET="$JWT_SECRET" \
             --build-arg JWT_ISSUER="$JWT_ISSUER" \
-            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE" .
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
 
   deploy:
-    needs: build
+    needs: build  # Ensures deployment runs only after a successful build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Azure Login
         uses: azure/login@v1
         with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}  # Store this in GitHub secrets
-                  - name: Install kubelogin (required for AAD authentication)
-                    run: |
-                      curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
-                      unzip kubelogin-linux-amd64.zip
-                      sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
-                      chmod +x /usr/local/bin/kubelogin
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Store this in GitHub secrets
 
-                  - name: Get AKS credentials
-                    run: |
-                      az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
-                      kubelogin convert-kubeconfig -l azurecli
+      - name: Install kubelogin (required for AAD authentication)
+        run: |
+          curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+          unzip kubelogin-linux-amd64.zip
+          sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
+          chmod +x /usr/local/bin/kubelogin
 
-                  - name: Create Kubernetes secrets (if not exists)
-                    run: |
-                      kubectl create secret generic api-secrets --dry-run=client -o yaml \
-                        --from-literal=CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
-                        --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-                        --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
-                        --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
-          
-      - name: Debug - Print IMAGE_TAG
+      - name: Get AKS credentials
         run: |
-          echo "IMAGE_TAG is: '${{ needs.build.outputs.IMAGE_TAG }}'"
-      - name: Set image in deployment
+          az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
+          kubelogin convert-kubeconfig -l azurecli
+
+      - name: Create Kubernetes secrets (if not exists)
         run: |
-          kubectl set image deployment/sai-avenue-api sai-avenue-api="${{ needs.build.outputs.IMAGE_TAG }}"
-      - name: Apply Deployment
+          kubectl create secret generic api-secrets --dry-run=client -o yaml \
+            --from-literal=CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
+            --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
+            --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
+
+      - name: Deploy to AKS
         run: |
           kubectl apply -f k8s/deployment.yaml
-      
-      - name: Apply Deployment
+          ls -l
+
+      - name: updating deployment
         run: |
-          kubectl apply -f k8s/deployment.yaml
+          kubectl rollout restart deployment sai-avenu-api
 
       - name: Verify Deployment
         run: |
-          kubectl rollout status deployment/sai-avenue-api
+          kubectl rollout status deployment sai-avenu-api
