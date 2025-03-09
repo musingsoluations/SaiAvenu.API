@@ -16,10 +16,10 @@ namespace SriSai.infrastructure.Persistent.EntityConfiguration
             builder.Property(x => x.Password).IsRequired().HasMaxLength(100);
             builder.Property(x => x.Mobile).IsRequired().HasMaxLength(10);
             builder.HasIndex(u => u.Mobile).IsUnique();
-            builder.Property(x => x.IsUserActive).IsRequired().HasColumnType("boolean");
+            builder.Property(x => x.IsUserActive).IsRequired();
             builder.Property(x => x.CreatedBy).IsRequired().HasMaxLength(38);
             builder.Property(x => x.CreatedDateTime).IsRequired().HasColumnType("timestamp");
-            builder.Property(x => x.IsDeleted).IsRequired().HasColumnType("boolean");
+            builder.Property(x => x.IsDeleted).IsRequired();
             builder.Property(x => x.DeletedBy).HasMaxLength(38);
             builder.Property(x => x.DeletedDateTime).HasColumnType("timestamp");
             builder.Property(x => x.UpdatedDateTime).HasColumnType("timestamp");
