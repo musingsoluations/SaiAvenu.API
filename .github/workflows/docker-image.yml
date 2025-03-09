@@ -1,11 +1,3 @@
-name: Docker Image CI and AKS Deployment
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,7 +25,8 @@ jobs:
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
           JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
         run: |
-          IMAGE_TAG="musing.azurecr.io/sai-avenu-api:${GITHUB_SHA}"
+          IMAGE_TAG="musing.azurecr.io/sai-avenu-api:${{ github.sha }}"
+          echo "IMAGE_TAG is: $IMAGE_TAG"
           docker buildx build --push \
             --tag "$IMAGE_TAG" \
             --file SriSai.API/Dockerfile . \
@@ -41,8 +34,7 @@ jobs:
             --build-arg JWT_SECRET="$JWT_SECRET" \
             --build-arg JWT_ISSUER="$JWT_ISSUER" \
             --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
-          # Set the output using the new syntax
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=\"$IMAGE_TAG\"" >> $GITHUB_OUTPUT
 
   deploy:
     needs: build
@@ -50,44 +42,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Install kubelogin (required for AAD authentication)
-        run: |
-          curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
-          chmod +x /usr/local/bin/kubelogin
-
-      - name: Get AKS credentials
-        run: |
-          az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Create Kubernetes secrets (if not exists)
-        run: |
-          kubectl create secret generic api-secrets --dry-run=client -o yaml \
-            --from-literal=CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
-            --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
-            --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
-
+      # ... (Azure login and credential steps) ...
       - name: Debug - Print IMAGE_TAG
         run: |
-          echo "IMAGE_TAG is: ${{ needs.build.outputs.IMAGE_TAG }}"
-
+          echo "IMAGE_TAG is: '${{ needs.build.outputs.IMAGE_TAG }}'"
       - name: Set image in deployment
         run: |
-          kubectl set image deployment/sai-avenue-api sai-avenue-api=${{ needs.build.outputs.IMAGE_TAG }}
-
+          kubectl set image deployment/sai-avenue-api sai-avenue-api="${{ needs.build.outputs.IMAGE_TAG }}"
       - name: Apply Deployment
         run: |
           kubectl apply -f k8s/deployment.yaml
-          ls -l
+      
+      - name: Apply Deployment
+        run: |
+          kubectl apply -f k8s/deployment.yaml
 
       - name: Verify Deployment
         run: |
