@@ -15,6 +15,7 @@ namespace SriSai.infrastructure.Persistent.EntityConfiguration
             builder.Property(x => x.Email).IsRequired().HasMaxLength(50);
             builder.Property(x => x.Password).IsRequired().HasMaxLength(100);
             builder.Property(x => x.Mobile).IsRequired().HasMaxLength(10);
+            builder.HasIndex(u => u.Mobile).IsUnique();
             builder.Property(x => x.IsUserActive).IsRequired().HasColumnType("boolean");
             builder.Property(x => x.CreatedBy).IsRequired().HasMaxLength(38);
             builder.Property(x => x.CreatedDateTime).IsRequired().HasColumnType("timestamp");
