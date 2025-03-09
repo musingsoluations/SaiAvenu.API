@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SriSai.infrastructure.Persistent.DbContext;
 
@@ -11,9 +12,11 @@ using SriSai.infrastructure.Persistent.DbContext;
 namespace SriSai.infrastructure.Migrations
 {
     [DbContext(typeof(SriSaiDbContext))]
-    partial class SriSaiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250309110320_Building")]
+    partial class Building
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
