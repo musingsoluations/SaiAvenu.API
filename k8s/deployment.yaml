@@ -46,6 +46,7 @@ metadata:
   name: sai-avenue-api-service
   annotations:
     service.beta.kubernetes.io/azure-dns-label-name: sai-avenue-api
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: "Musing-Apps"
 spec:
   selector:
     app: sai-avenue-api
