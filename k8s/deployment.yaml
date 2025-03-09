@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: sai-avenue-api
-          image: musing.azurecr.io/sai-avenu-api:latest
+          image: musing.azurecr.io/sai-avenue-api:latest
           ports:
             - containerPort: 80
           env:
