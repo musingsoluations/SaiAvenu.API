@@ -32,16 +32,15 @@ namespace SriSai.infrastructure.Migrations
                         .HasMaxLength(38)
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<byte[]>("CreatedDateTime")
-                        .IsRequired()
-                        .HasColumnType("timestamp");
+                    b.Property<DateTime>("CreatedDateTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid?>("DeletedBy")
                         .HasMaxLength(38)
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<byte[]>("DeletedDateTime")
-                        .HasColumnType("timestamp");
+                    b.Property<DateTime?>("DeletedDateTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -78,8 +77,8 @@ namespace SriSai.infrastructure.Migrations
                         .HasMaxLength(38)
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<byte[]>("UpdatedDateTime")
-                        .HasColumnType("timestamp");
+                    b.Property<DateTime?>("UpdatedDateTime")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -108,7 +107,7 @@ namespace SriSai.infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uniqueidentifier");

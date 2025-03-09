@@ -23,11 +23,11 @@ namespace SriSai.infrastructure.Migrations
                     Mobile = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     IsUserActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", maxLength: 38, nullable: false),
-                    CreatedDateTime = table.Column<byte[]>(type: "timestamp", nullable: false),
+                    CreatedDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedBy = table.Column<Guid>(type: "uniqueidentifier", maxLength: 38, nullable: true),
-                    DeletedDateTime = table.Column<byte[]>(type: "timestamp", nullable: true),
-                    UpdatedDateTime = table.Column<byte[]>(type: "timestamp", nullable: true),
+                    DeletedDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatedById = table.Column<Guid>(type: "uniqueidentifier", maxLength: 38, nullable: true)
                 },
                 constraints: table =>
@@ -44,7 +44,7 @@ namespace SriSai.infrastructure.Migrations
                     UserEntityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     DeletedDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatedDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
