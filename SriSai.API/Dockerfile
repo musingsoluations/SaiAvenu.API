@@ -1,19 +1,22 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+﻿﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
 ENV ASPNETCORE_ENVIRONMENT=Production
-# Define all environment variables
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_CONFIGURATION=Release
 ARG CONNECTION_STRING
 ARG JWT_SECRET
 ARG JWT_ISSUER
 ARG JWT_AUDIENCE
-
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+ENV ConnectionStrings__DefaultConnection=$CONNECTION_STRING
+ENV Jwt__Secret=$JWT_SECRET
+ENV Jwt__Issuer=$JWT_ISSUER
+ENV Jwt__Audience=$JWT_AUDIENCE
 COPY ["SriSai.API/SriSai.API.csproj", "SriSai.API/"]
 COPY ["SriSai.Application/SriSai.Application.csproj", "SriSai.Application/"]
 COPY ["SriSai.Domain/SriSai.Domain.csproj", "SriSai.Domain/"]
