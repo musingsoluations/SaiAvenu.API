@@ -188,7 +188,7 @@ namespace SriSai.infrastructure.Migrations
                     b.HasOne("SriSai.Domain.Entity.Users.UserEntity", "Renter")
                         .WithMany("RentedApartments")
                         .HasForeignKey("RenterId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Owner");
 

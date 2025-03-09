@@ -20,7 +20,7 @@ public class ApartmentEntityConfiguration : IEntityTypeConfiguration<Apartment>
         builder.HasOne(a => a.Renter)
             .WithMany(u => u.RentedApartments)
             .IsRequired(false)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
         builder.HasIndex(a => a.RenterId);
     }
 }

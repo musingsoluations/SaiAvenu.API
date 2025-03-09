@@ -12,7 +12,7 @@ using SriSai.infrastructure.Persistent.DbContext;
 namespace SriSai.infrastructure.Migrations
 {
     [DbContext(typeof(SriSaiDbContext))]
-    [Migration("20250309111657_Initial")]
+    [Migration("20250309112950_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -191,7 +191,7 @@ namespace SriSai.infrastructure.Migrations
                     b.HasOne("SriSai.Domain.Entity.Users.UserEntity", "Renter")
                         .WithMany("RentedApartments")
                         .HasForeignKey("RenterId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Owner");
 

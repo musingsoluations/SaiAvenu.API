@@ -64,8 +64,7 @@ namespace SriSai.infrastructure.Migrations
                         name: "FK_Apartment_User_RenterId",
                         column: x => x.RenterId,
                         principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
