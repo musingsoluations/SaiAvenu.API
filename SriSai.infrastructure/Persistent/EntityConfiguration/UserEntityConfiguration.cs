@@ -20,10 +20,10 @@ namespace SriSai.infrastructure.Persistent.EntityConfiguration
             builder.Property(x => x.CreatedBy).IsRequired().HasMaxLength(38);
             builder.Property(x => x.CreatedDateTime).IsRequired().HasColumnType("timestamp");
             builder.Property(x => x.IsDeleted).IsRequired().HasColumnType("boolean");
-            builder.Property(x => x.DeletedBy).IsRequired().HasMaxLength(38);
-            builder.Property(x => x.DeletedDateTime).IsRequired().HasColumnType("timestamp");
-            builder.Property(x => x.UpdatedDateTime).IsRequired().HasColumnType("timestamp");
-            builder.Property(x => x.UpdatedById).IsRequired().HasMaxLength(38);
+            builder.Property(x => x.DeletedBy).HasMaxLength(38);
+            builder.Property(x => x.DeletedDateTime).HasColumnType("timestamp");
+            builder.Property(x => x.UpdatedDateTime).HasColumnType("timestamp");
+            builder.Property(x => x.UpdatedById).HasMaxLength(38);
             builder.HasMany(x => x.Roles);
         }
     }

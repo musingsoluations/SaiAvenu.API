@@ -12,8 +12,8 @@ using SriSai.infrastructure.Persistent.DbContext;
 namespace SriSai.infrastructure.Migrations
 {
     [DbContext(typeof(SriSaiDbContext))]
-    [Migration("20250309034940_AddedIndex_mobile")]
-    partial class AddedIndex_mobile
+    [Migration("20250309040829_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,52 +32,64 @@ namespace SriSai.infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CreatedBy")
+                        .HasMaxLength(38)
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedDateTime")
-                        .HasColumnType("datetime2");
+                    b.Property<byte[]>("CreatedDateTime")
+                        .IsRequired()
+                        .HasColumnType("timestamp");
 
                     b.Property<Guid?>("DeletedBy")
+                        .HasMaxLength(38)
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("DeletedDateTime")
-                        .HasColumnType("datetime2");
+                    b.Property<byte[]>("DeletedDateTime")
+                        .HasColumnType("timestamp");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsUserActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Mobile")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("UpdatedById")
+                        .HasMaxLength(38)
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("UpdatedDateTime")
-                        .HasColumnType("datetime2");
+                    b.Property<byte[]>("UpdatedDateTime")
+                        .HasColumnType("timestamp");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.HasIndex("Mobile")
+                        .IsUnique();
+
+                    b.ToTable("User", (string)null);
                 });
 
             modelBuilder.Entity("SriSai.Domain.Entity.Users.UserRole", b =>
@@ -99,7 +111,7 @@ namespace SriSai.infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uniqueidentifier");
@@ -112,13 +124,14 @@ namespace SriSai.infrastructure.Migrations
 
                     b.Property<string>("UserRoleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserEntityId");
 
-                    b.ToTable("UserRole");
+                    b.ToTable("UserRole", (string)null);
                 });
 
             modelBuilder.Entity("SriSai.Domain.Entity.Users.UserRole", b =>

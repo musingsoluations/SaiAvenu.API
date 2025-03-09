@@ -9,5 +9,11 @@ namespace SriSai.infrastructure.Persistent.DbContext
         {
         }
         public DbSet<UserEntity> Users { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(SriSaiDbContext).Assembly);
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }
