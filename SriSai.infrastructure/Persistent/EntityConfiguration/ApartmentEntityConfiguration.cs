@@ -19,8 +19,7 @@ public class ApartmentEntityConfiguration : IEntityTypeConfiguration<Apartment>
             .IsRequired();
         builder.HasOne(a => a.Renter)
             .WithMany(u => u.RentedApartments)
-            .HasForeignKey(a => a.RenterId)
-            .IsRequired(false) // Nullable RenterId
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(a => a.RenterId);
     }

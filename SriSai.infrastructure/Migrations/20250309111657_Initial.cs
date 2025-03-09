@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SriSai.infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -36,6 +36,39 @@ namespace SriSai.infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Apartment",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ApartmentNumber = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
+                    OwnerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RenterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletedDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedById = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Apartment", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Apartment_User_OwnerId",
+                        column: x => x.OwnerId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Apartment_User_RenterId",
+                        column: x => x.RenterId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserRole",
                 columns: table => new
                 {
@@ -62,6 +95,16 @@ namespace SriSai.infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Apartment_OwnerId",
+                table: "Apartment",
+                column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Apartment_RenterId",
+                table: "Apartment",
+                column: "RenterId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_User_Mobile",
                 table: "User",
                 column: "Mobile",
@@ -76,6 +119,9 @@ namespace SriSai.infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Apartment");
+
             migrationBuilder.DropTable(
                 name: "UserRole");
 
