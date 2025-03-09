@@ -33,7 +33,7 @@ public class JwtTokenService : IJwtTokenService
         foreach (var role in user.Roles) claims.Add(new Claim("role", role));
 
         var key = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]));
+            Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"] ?? string.Empty));
 
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

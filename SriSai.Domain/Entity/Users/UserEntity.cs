@@ -1,5 +1,6 @@
 using ErrorOr;
 using SriSai.Domain.Entity.Base;
+using SriSai.Domain.Entity.Building;
 using SriSai.Domain.Errors;
 using SriSai.Domain.Imp;
 using SriSai.Domain.Interface;
@@ -27,6 +28,9 @@ public class UserEntity : EntityBase
     public string Mobile { get; private set; } = string.Empty;
     public bool IsUserActive { get; private set; } = true;
     public IList<UserRole> Roles { get; set; } = new List<UserRole>();
+
+    public ICollection<Apartment> OwnedApartments { get; set; }
+    public ICollection<Apartment> RentedApartments { get; set; }
 
     public UserEntity AddNewUser(string firstName, string lastName, string email, string password, string mobile,
         IList<UserRole> userRoles, Guid currentUserId)
@@ -92,7 +96,7 @@ public class UserEntity : EntityBase
     {
         if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) || string.IsNullOrEmpty(email) ||
             string.IsNullOrEmpty(password) ||
-            string.IsNullOrEmpty(mobile)) return Error.Validation(PreDefinedErrors.ImproperData);
+            string.IsNullOrEmpty(mobile)) return Error.Validation(PreDefinedErrorsForUsers.ImproperUserData);
         FirstName = firstName;
         LastName = lastName;
         Email = email;

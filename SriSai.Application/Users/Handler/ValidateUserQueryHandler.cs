@@ -28,10 +28,10 @@ public class ValidateUserQueryHandler
         CancellationToken cancellationToken)
     {
         var user = (await _userRepository.ListAsync(u => u.Mobile == request.Mobile)).FirstOrDefault();
-        if (user is null) return Error.Forbidden(PreDefinedErrors.UserNotFound);
+        if (user is null) return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
 
         if (!_passwordVerifier.VerifyPassword(request.Password, user.Password))
-            return Error.Forbidden(PreDefinedErrors.UserNotFound);
+            return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
         var roles = await _userRoleRepository.ListAsync(z => z.UserEntityId == user.Id);
         user.Roles = roles.ToList();
         return new UserProfileResponse(

@@ -7,18 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SriSai.Domain\SriSai.Domain.csproj" />
+        <ProjectReference Include="..\SriSai.Domain\SriSai.Domain.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="12.4.1" />
-      <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
+        <PackageReference Include="MediatR" Version="12.4.1"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="DependencyInjection/" />
-      <Folder Include="interfaces/Encryption/" />
-      <Folder Include="Users\Query\" />
+        <Folder Include="Apartment\Command\"/>
+        <Folder Include="Apartment\Handler\"/>
+        <Folder Include="Apartment\Query\"/>
+        <Folder Include="DependencyInjection/"/>
+        <Folder Include="interfaces/Encryption/"/>
+        <Folder Include="Users\Query\"/>
     </ItemGroup>
 
 </Project>

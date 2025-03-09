@@ -37,7 +37,8 @@ builder.Services.AddAuthentication(options =>
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"])),
+            IssuerSigningKey =
+                new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"] ?? string.Empty)),
             ValidateIssuer = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidateAudience = true,
@@ -45,35 +46,6 @@ builder.Services.AddAuthentication(options =>
             // RoleClaimType = "role",
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(2) // Allow 2 minute clock drift
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnChallenge = context =>
-            {
-                var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-                logger.LogWarning("Authentication challenge issued: {Reason}", context.AuthenticateFailure?.Message);
-                return Task.CompletedTask;
-            },
-
-            OnAuthenticationFailed = context =>
-            {
-                var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<Program>>();
-                logger.LogError("Authentication failed: {Exception}", context.Exception);
-                logger.LogDebug("Validation parameters: {Params}", options.TokenValidationParameters);
-                return Task.CompletedTask;
-            },
-
-            OnTokenValidated = context =>
-            {
-                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                var roles = context.Principal?.Claims
-                    .Where(c => c.Type == "role")
-                    .Select(c => c.Value);
-
-                logger.LogInformation("User roles: {Roles}", string.Join(", ", roles));
-                return Task.CompletedTask;
-            }
         };
     });
 
@@ -100,7 +72,7 @@ builder.Services.AddOpenApi(options => { options.AddDocumentTransformer<BearerSe
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDomain();
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(connectionString);
+if (connectionString != null) builder.Services.AddInfrastructure(connectionString);
 
 // Register JWT token service
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
