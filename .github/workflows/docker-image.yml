@@ -33,11 +33,11 @@ jobs:
           docker buildx build --push \
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:${{ github.sha }} \
-            --file SriSai.API/Dockerfile
+            --file SriSai.API/Dockerfile \
             --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
             --build-arg JWT_SECRET="$JWT_SECRET" \
             --build-arg JWT_ISSUER="$JWT_ISSUER" \
-            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
+            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE" \
             .
 
   deploy:
