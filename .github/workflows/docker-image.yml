@@ -18,7 +18,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}  # If your GHCR is public, you can try using ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -28,7 +28,12 @@ jobs:
           docker buildx build --push \
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:${{ github.sha }} \
-            --file SriSai.API/Dockerfile .
+            --file SriSai.API/Dockerfile \
+            --build-arg CONNECTION_STRING="${{ secrets.CONNECTION_STRING }}" \
+            --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            --build-arg JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
+            --build-arg JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" \
+            .
 
   deploy:
     needs: build
@@ -42,21 +47,8 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_DEPLOY }}
 
-      - name: Configure App Settings
-        run: |
-          az webapp config appsettings set \
-          --resource-group MySocietyHub-test \
-          --name mysocietyhub-test \
-          --settings \
-            "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}" \
-            "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
-            "JWT_ISSUER=${{ secrets.JWT_ISSUER }}" \
-            "JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}"
-
       - name: Deploy to Azure Web App
         run: |
-          # If your container is PUBLIC, you can omit --docker-registry-server-user and password
-          # If your container is PRIVATE, pass your GHCR credentials here as well:
           az webapp config container set \
             --name mysocietyhub-test \
             --resource-group MySocietyHub-test \
@@ -65,7 +57,6 @@ jobs:
             --docker-registry-server-user ${{ github.actor }} \
             --docker-registry-server-password ${{ secrets.GHCR_PAT }}
 
-          # Restart the Web App to ensure the new container is pulled
           az webapp restart \
             --name mysocietyhub-test \
             --resource-group MySocietyHub-test
