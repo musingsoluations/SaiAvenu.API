@@ -24,11 +24,20 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and Push Docker Image
+        env:
+          CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
         run: |
           docker buildx build --push \
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:${{ github.sha }} \
             --file SriSai.API/Dockerfile .
+            --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
+            --build-arg JWT_SECRET="$JWT_SECRET" \
+            --build-arg JWT_ISSUER="$JWT_ISSUER" \
+            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
 
   deploy:
     needs: build
