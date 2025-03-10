@@ -1,4 +1,4 @@
-name: Docker Image CI and AKS Deployment
+name: Build and Push Image to GHCR
 
 on:
   push:
@@ -9,78 +9,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Login to Azure Container Registry
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: musing.azurecr.io
-          username: ${{ secrets.AZURE_CR_USERNAME }}
-          password: ${{ secrets.AZURE_CR_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image
+      - name: Build and Push Docker Image
         env:
+          # Optional build-time environment variables (set these in your repo secrets if required)
           CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
           JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
         run: |
           docker buildx build --push \
-            --tag musing.azurecr.io/sai-avenue-api:latest \
-            --file SriSai.API/Dockerfile . \
-            --build-arg CONNECTION_STRING="$CONNECTION_STRING" \
-            --build-arg JWT_SECRET="$JWT_SECRET" \
-            --build-arg JWT_ISSUER="$JWT_ISSUER" \
-            --build-arg JWT_AUDIENCE="$JWT_AUDIENCE"
-
-  deploy:
-    needs: build  # Ensures deployment runs only after a successful build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Store this in GitHub secrets
-
-      - name: Install kubelogin (required for AAD authentication)
-        run: |
-          curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
-          unzip kubelogin-linux-amd64.zip
-          sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
-          chmod +x /usr/local/bin/kubelogin
-
-      - name: Get AKS credentials
-        run: |
-          az aks get-credentials --resource-group Musing-Apps --name musing --overwrite-existing
-          kubelogin convert-kubeconfig -l azurecli
-
-      - name: Create Kubernetes secrets (if not exists)
-        run: |
-          kubectl create secret generic api-secrets --dry-run=client -o yaml \
-            --from-literal=CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
-            --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            --from-literal=JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
-            --from-literal=JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" | kubectl apply -f -
-
-      - name: Deploy to AKS
-        run: |
-          kubectl apply -f k8s/deployment.yaml
-          ls -l
-
-      - name: updating deployment
-        run: |
-          kubectl rollout restart deployment sai-avenue-api
-
-      - name: Verify Deployment
-        run: |
-          kubectl rollout status deployment sai-avenue-api
+            --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
+            --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:${{ github.sha }} \
+            --file SriSai.API/Dockerfile .
