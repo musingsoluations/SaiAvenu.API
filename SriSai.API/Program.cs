@@ -16,8 +16,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configure configuration sources with proper precedence
 builder.Configuration
-    .AddEnvironmentVariables()
-    .AddUserSecrets<Program>(true, true)
     .AddJsonFile("appsettings.json", false, true)
     .AddJsonFile("appsettings.Development.json", true, true);
 
