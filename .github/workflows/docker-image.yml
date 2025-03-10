@@ -26,6 +26,6 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           docker buildx build --push \
-            --tag ghcr.io/musingsolutions/sai-avenue-api:latest \
-            --tag ghcr.io/musingsolutions/sai-avenue-api:${{ github.sha }} \
+            --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
+            --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:${{ github.sha }} \
             --file SriSai.API/Dockerfile .
