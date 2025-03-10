@@ -19,7 +19,7 @@ ARG JWT_AUDIENCE
 COPY ["SriSai.API/SriSai.API.csproj", "SriSai.API/"]
 COPY ["SriSai.Application/SriSai.Application.csproj", "SriSai.Application/"]
 COPY ["SriSai.Domain/SriSai.Domain.csproj", "SriSai.Domain/"]
-COPY ["SriSai.infrastructure/SriSai.infrastructure.csproj", "SriSai.Infrastructure/"]
+COPY ["SriSai.infrastructure/SriSai.infrastructure.csproj", "SriSai.infrastructure/"]
 RUN dotnet restore "SriSai.API/SriSai.API.csproj"
 COPY ../.. .
 WORKDIR "/src/SriSai.API"
