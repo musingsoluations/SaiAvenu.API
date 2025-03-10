@@ -1,4 +1,4 @@
-name: Build and Push Image to GHCR
+name: Build and Deploy to Azure Web App
 
 on:
   push:
@@ -13,12 +13,12 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GHCR_PAT }}  # If your GHCR is public, you can try using ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -29,3 +29,48 @@ jobs:
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
             --tag ghcr.io/${{ github.repository_owner }}/sai-avenue-api:${{ github.sha }} \
             --file SriSai.API/Dockerfile .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_DEPLOY }}
+
+      # (Optional) If you have environment variables that need to be set at runtime, do so here:
+      # - name: Configure App Settings
+      #   run: |
+      #     az webapp config appsettings set \
+      #       --resource-group MySocietyHub-test \
+      #       --name mysocietyhub-test \
+      #       --settings \
+      #         "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING }}" \
+      #         "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+      #         "JWT_ISSUER=${{ secrets.JWT_ISSUER }}" \
+      #         "JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}"
+
+      - name: Deploy to Azure Web App
+        run: |
+          # If your container is PUBLIC, you can omit --docker-registry-server-user and password
+          # If your container is PRIVATE, pass your GHCR credentials here as well:
+          az webapp config container set \
+            --name mysocietyhub-test \
+            --resource-group MySocietyHub-test \
+            --docker-custom-image-name ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
+            --docker-registry-server-url https://ghcr.io \
+            --docker-registry-server-user ${{ github.actor }} \
+            --docker-registry-server-password ${{ secrets.GHCR_PAT }}
+
+          # Restart the Web App to ensure the new container is pulled
+          az webapp restart \
+            --name mysocietyhub-test \
+            --resource-group MySocietyHub-test
+
+      - name: Verify Deployment
+        run: |
+          echo "Deployment completed. Check the Azure Web App at https://mysocietyhub-test.azurewebsites.net"
