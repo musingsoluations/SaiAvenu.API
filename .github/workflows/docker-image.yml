@@ -18,14 +18,14 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build and Push Docker Image
         env:
-          # Optional build-time environment variables (set these in your repo secrets if required)
+          # Optional build-time environment variables (ensure they are not leaking sensitive info)
           CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
