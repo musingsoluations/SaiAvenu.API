@@ -24,6 +24,16 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateUserDtoValidator>(Ser
 // Add services to the container
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
     {
