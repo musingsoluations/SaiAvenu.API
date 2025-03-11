@@ -80,7 +80,7 @@ var app = builder.Build();
 // Initialize database migrations
 using var scope = app.Services.CreateScope();
 var migrationService = scope.ServiceProvider.GetRequiredService<DatabaseMigrationService>();
-//await migrationService.StartAsync(CancellationToken.None);
+await migrationService.StartAsync(CancellationToken.None);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
