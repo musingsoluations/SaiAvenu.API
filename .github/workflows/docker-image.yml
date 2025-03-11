@@ -50,7 +50,7 @@ jobs:
       - name: Deploy to Azure Web App
         run: |
           az webapp config container set \
-            --name mysocietyhub-test \
+            --name MySocietyHub-api \
             --resource-group MySocietyHub-test \
             --docker-custom-image-name ghcr.io/${{ github.repository_owner }}/sai-avenue-api:latest \
             --docker-registry-server-url https://ghcr.io \
@@ -58,7 +58,7 @@ jobs:
             --docker-registry-server-password ${{ secrets.GHCR_PAT }}
 
           az webapp restart \
-            --name mysocietyhub-test \
+            --name MySocietyHub-api \
             --resource-group MySocietyHub-test
 
       - name: Verify Deployment
