@@ -30,7 +30,7 @@ public class JwtTokenService : IJwtTokenService
         };
 
         // Add role claims
-        foreach (var role in user.Roles) claims.Add(new Claim("role", role));
+        foreach (var role in user.Roles) claims.Add(new Claim("roles", role));
 
         var key = new SymmetricSecurityKey(
             Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"] ?? string.Empty));

@@ -51,7 +51,6 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidateAudience = true,
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            // RoleClaimType = "role",
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(2) // Allow 2 minute clock drift
         };

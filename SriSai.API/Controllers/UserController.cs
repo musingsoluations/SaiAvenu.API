@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SriSai.API.DTOs.Users;
 using SriSai.API.Services.Auth;
@@ -28,7 +29,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    //[Authorize("AdminOnly")]
+    [Authorize("AdminOnly")]
     public async Task<IActionResult> AddUser(CreateUserDto createUserDto)
     {
         var validationResult = await _validator.ValidateAsync(createUserDto);
