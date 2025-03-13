@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -42,6 +43,7 @@ public class UserController : ControllerBase
                 Extensions = { ["errors"] = validationResult.Errors.Select(e => e.ErrorMessage).ToArray() }
             });
 
+        var userGuid = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
         // Create UserRole objects from string roles
         var roles = createUserDto.Roles.Select(roleString =>
             new UserRole { UserRoleName = roleString }).ToList();
@@ -54,7 +56,7 @@ public class UserController : ControllerBase
             Password = createUserDto.Password,
             Mobile = createUserDto.Mobile,
             Roles = roles,
-            CreatedById = Guid.Empty // Temporary dummy value
+            CreatedById = Guid.Parse(userGuid ?? string.Empty)
         };
 
         var result = await _mediator.Send(command);
