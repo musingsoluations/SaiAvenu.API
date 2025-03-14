@@ -8,6 +8,7 @@ public static class PreDefinedErrorsForUsers
     public static readonly string RoleAlreadyAssigned = "Role is already assigned to the user";
     public static readonly string UserAlreadyExist = "User already exist with this mobile number";
     public static readonly string UserNotFound = "Invalid User or password";
+    public static readonly string InvalidPassword = "Invalid Password";
 }
 
 public static class PreDefinedErrorsForBuilding
