@@ -1,49 +1,51 @@
+using ErrorOr;
 using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SriSai.API.DTOs.Building;
 using SriSai.Application.Building.Command;
 
-namespace SriSai.API.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class ApartmentController : ControllerBase
+namespace SriSai.API.Controllers
 {
-    private readonly IMediator _mediator;
-    private readonly IValidator<CreateApartmentDto> _validator;
-
-    public ApartmentController(
-        IMediator mediator,
-        IValidator<CreateApartmentDto> validator)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ApartmentController : ControllerBase
     {
-        _mediator = mediator;
-        _validator = validator;
-    }
+        private readonly IMediator _mediator;
+        private readonly IValidator<CreateApartmentDto> _validator;
 
-    [HttpPost]
-    public async Task<IActionResult> CreateApartment(CreateApartmentDto dto)
-    {
-        var validationResult = await _validator.ValidateAsync(dto);
-        if (!validationResult.IsValid)
+        public ApartmentController(
+            IMediator mediator,
+            IValidator<CreateApartmentDto> validator)
         {
-            return BadRequest(new
-            {
-                Errors = validationResult.Errors.Select(e => e.ErrorMessage)
-            });
+            _mediator = mediator;
+            _validator = validator;
         }
 
-        var command = new CreateApartmentCommand(
-            ApartmentNumber: dto.ApartmentNumber,
-            OwnerId: dto.OwnerId,
-            RenterId: dto.RenterId
-        );
+        [HttpPost("Apartment")]
+        [Authorize("Admin")]
+        public async Task<IActionResult> CreateApartment(CreateApartmentDto dto)
+        {
+            ValidationResult? validationResult = await _validator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new { Errors = validationResult.Errors.Select(e => e.ErrorMessage) });
+            }
 
-        var result = await _mediator.Send(command);
+            CreateApartmentCommand command = new(
+                dto.ApartmentNumber,
+                dto.OwnerId,
+                dto.RenterId
+            );
 
-        return result.Match(
-            apartmentId => Ok(apartmentId),
-            errors => Problem(string.Join(", ", errors.Select(e => e.Description)))
-        );
+            ErrorOr<Guid> result = await _mediator.Send(command);
+
+            return result.Match(
+                apartmentId => Ok(apartmentId),
+                errors => Problem(string.Join(", ", errors.Select(e => e.Description)))
+            );
+        }
     }
 }
