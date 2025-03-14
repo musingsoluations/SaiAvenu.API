@@ -26,7 +26,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpPost("Apartment")]
-        [Authorize("Admin")]
+        [Authorize("AdminOnly")]
         public async Task<IActionResult> CreateApartment(CreateApartmentDto dto)
         {
             ValidationResult? validationResult = await _validator.ValidateAsync(dto);
@@ -49,12 +49,12 @@ namespace SriSai.API.Controllers
             );
         }
 
-        [HttpGet("WithRoles")]
-        [Authorize("Admin")]
+        [HttpPost("WithRoles")]
+        [Authorize("AdminOnly")]
         public async Task<IActionResult> GetUsersWithSpecifiedRoles([FromBody] List<string> roles)
         {
-            var query = new GetUserWithSpecifiedRoleQuery(roles);
-            var result = await _mediator.Send(query);
+            GetUserWithSpecifiedRoleQuery query = new(roles);
+            List<UserWithRoleResponse> result = await _mediator.Send(query);
             return Ok(result);
         }
     }
