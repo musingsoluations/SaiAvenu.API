@@ -1,44 +1,39 @@
-using ErrorOr;
 using MediatR;
 using SriSai.Application.interfaces.Reposerty;
 using SriSai.Application.Users.Query;
 using SriSai.Domain.Entity.Users;
-using SriSai.Domain.Errors;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace SriSai.Application.Users.Handler;
-
-public class GetUserWithSpecifiedRoleQueryHandler
-    : IRequestHandler<GetUserWithSpecifiedRoleQuery, List<UserWithRoleResponse>>
+namespace SriSai.Application.Users.Handler
 {
-    private readonly IRepository<UserEntity> _userRepository;
-
-    public GetUserWithSpecifiedRoleQueryHandler(IRepository<UserEntity> userRepository)
+    public class GetUserWithSpecifiedRoleQueryHandler
+        : IRequestHandler<GetUserWithSpecifiedRoleQuery, List<UserWithRoleResponse>>
     {
-        _userRepository = userRepository;
-    }
+        private readonly IRepository<UserEntity> _userRepository;
 
-    public async Task<List<UserWithRoleResponse>> Handle(
-        GetUserWithSpecifiedRoleQuery request,
-        CancellationToken cancellationToken)
-    {
-        if (request.Roles == null || !request.Roles.Any())
+        public GetUserWithSpecifiedRoleQueryHandler(IRepository<UserEntity> userRepository)
         {
-            return new List<UserWithRoleResponse>();
+            _userRepository = userRepository;
         }
 
-        var users = await _userRepository.ListAllAsync(x =>
-            x.Roles.Any(userRole => request.Roles.Contains(userRole.UserRoleName)));
+        public async Task<List<UserWithRoleResponse>> Handle(
+            GetUserWithSpecifiedRoleQuery request,
+            CancellationToken cancellationToken)
+        {
+            if (!request.Roles.Any())
+            {
+                return new List<UserWithRoleResponse>();
+            }
 
-        return users
-            .Select(u => new UserWithRoleResponse(
-                u.Id.ToString(),
-                u.FirstName,
-                u.LastName
-            ))
-            .ToList();
+            IEnumerable<UserEntity> users = await _userRepository.ListAllAsync(x =>
+                x.Roles.Any(userRole => request.Roles.Contains(userRole.UserRoleName)));
+
+            return users
+                .Select(u => new UserWithRoleResponse(
+                    u.Id.ToString(),
+                    u.FirstName,
+                    u.LastName
+                ))
+                .ToList();
+        }
     }
 }

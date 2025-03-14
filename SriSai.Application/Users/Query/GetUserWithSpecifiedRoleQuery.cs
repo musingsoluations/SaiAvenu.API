@@ -1,6 +1,5 @@
 using MediatR;
 using SriSai.Domain.Entity.Users;
-using System.Collections.Generic;
 
 namespace SriSai.Application.Users.Query
 {

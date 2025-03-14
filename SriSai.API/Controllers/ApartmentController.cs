@@ -49,7 +49,7 @@ namespace SriSai.API.Controllers
             );
         }
 
-        [HttpPost("WithRoles")]
+        [HttpPost("userwithroles")]
         [Authorize("AdminOnly")]
         public async Task<IActionResult> GetUsersWithSpecifiedRoles([FromBody] List<string> roles)
         {
