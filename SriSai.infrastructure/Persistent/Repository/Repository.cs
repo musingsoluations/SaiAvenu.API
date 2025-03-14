@@ -22,14 +22,9 @@ namespace SriSai.Infrastructure.Persistent.Repository
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<IEnumerable<T>> ListAllAsync()
+        public async Task<IEnumerable<T>> ListAllAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _context.Set<T>().AsNoTracking().ToListAsync();
-        }
-
-        public async Task<IEnumerable<T>> ListAsync(Expression<Func<T, bool>> predicate)
-        {
-            return await _context.Set<T>().AsNoTracking().Where(predicate).ToListAsync();
+            return await _context.Set<T>().Where(predicate).AsNoTracking().ToListAsync();
         }
 
         public async Task<T> AddAsync(T entity)
@@ -46,6 +41,16 @@ namespace SriSai.Infrastructure.Persistent.Repository
         public async Task DeleteAsync(T entity)
         {
             _context.Set<T>().Remove(entity);
+        }
+
+        public async Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().Where(predicate).AsNoTracking().SingleOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<T>> ListAllAsync()
+        {
+            return await _context.Set<T>().AsNoTracking().ToListAsync();
         }
     }
 }

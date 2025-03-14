@@ -91,7 +91,7 @@ namespace SriSai.API.Controllers
                     Problem(string.Join(", ", errors.Select(e => e.Description))));
         }
 
-        [HttpPost("UpdateProfile")]
+        [HttpPatch("profile")]
         [Authorize]
         public async Task<IActionResult> UpdateUserProfile(UserProfileDto userProfile)
         {
@@ -126,8 +126,13 @@ namespace SriSai.API.Controllers
             ErrorOr<UserProfile> result = await _mediator.Send(command);
             return result.Match(
                 user => Ok(result.Value),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Description)))
-            );
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Status = 400,
+                    Title = "Validation Error",
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                }));
         }
 
         [HttpPost("login")]
@@ -144,8 +149,13 @@ namespace SriSai.API.Controllers
                     Mobile = user.Mobile,
                     JwtToken = _jwtTokenService.GenerateToken(user)
                 }),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Description)))
-            );
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Status = 400,
+                    Title = "Validation Error",
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                }));
         }
     }
 }

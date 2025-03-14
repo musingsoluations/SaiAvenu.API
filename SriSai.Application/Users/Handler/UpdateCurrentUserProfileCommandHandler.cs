@@ -45,6 +45,12 @@ namespace SriSai.Application.Users.Handler
                 currentData.UpdatePassword(request.Password);
             }
 
+            UserEntity? findUserByMobile = await _userRepository.FindOneAsync(x => x.Mobile == request.Mobile);
+            if (findUserByMobile is not null && findUserByMobile.Id != currentData.Id)
+            {
+                return Error.Validation(PreDefinedErrorsForUsers.MobileAlreadyExists);
+            }
+
             currentData.UpdateFirstName(request.FirstName);
             currentData.UpdateLastName(request.LastName);
             currentData.UpdateEmail(request.Email);

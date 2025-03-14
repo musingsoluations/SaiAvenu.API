@@ -6,40 +6,47 @@ using SriSai.Application.Users.Query;
 using SriSai.Domain.Entity.Users;
 using SriSai.Domain.Errors;
 
-namespace SriSai.Application.Users.Handler;
-
-public class ValidateUserQueryHandler
-    : IRequestHandler<ValidateUserQuery, ErrorOr<UserProfileResponse>>
+namespace SriSai.Application.Users.Handler
 {
-    private readonly IVerifyPassword _passwordVerifier;
-    private readonly IRepository<UserEntity> _userRepository;
-    private readonly IRepository<UserRole> _userRoleRepository;
-
-    public ValidateUserQueryHandler(IRepository<UserEntity> userRepository, IVerifyPassword passwordVerifier,
-        IRepository<UserRole> userRoleRepository)
+    public class ValidateUserQueryHandler
+        : IRequestHandler<ValidateUserQuery, ErrorOr<UserProfileResponse>>
     {
-        _userRepository = userRepository;
-        _passwordVerifier = passwordVerifier;
-        _userRoleRepository = userRoleRepository;
-    }
+        private readonly IVerifyPassword _passwordVerifier;
+        private readonly IRepository<UserEntity> _userRepository;
+        private readonly IRepository<UserRole> _userRoleRepository;
 
-    public async Task<ErrorOr<UserProfileResponse>> Handle(
-        ValidateUserQuery request,
-        CancellationToken cancellationToken)
-    {
-        var user = (await _userRepository.ListAsync(u => u.Mobile == request.Mobile)).FirstOrDefault();
-        if (user is null) return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
+        public ValidateUserQueryHandler(IRepository<UserEntity> userRepository, IVerifyPassword passwordVerifier,
+            IRepository<UserRole> userRoleRepository)
+        {
+            _userRepository = userRepository;
+            _passwordVerifier = passwordVerifier;
+            _userRoleRepository = userRoleRepository;
+        }
 
-        if (!_passwordVerifier.VerifyPassword(request.Password, user.Password))
-            return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
-        var roles = await _userRoleRepository.ListAsync(z => z.UserEntityId == user.Id);
-        user.Roles = roles.ToList();
-        return new UserProfileResponse(
-            user.Id,
-            user.FirstName,
-            user.LastName,
-            user.Email,
-            user.Mobile,
-            user.Roles.Select(r => r.UserRoleName).ToList());
+        public async Task<ErrorOr<UserProfileResponse>> Handle(
+            ValidateUserQuery request,
+            CancellationToken cancellationToken)
+        {
+            UserEntity? user = await _userRepository.FindOneAsync(u => u.Mobile == request.Mobile);
+            if (user is null)
+            {
+                return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
+            }
+
+            if (!_passwordVerifier.VerifyPassword(request.Password, user.Password))
+            {
+                return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
+            }
+
+            IEnumerable<UserRole> roles = await _userRoleRepository.ListAllAsync(z => z.UserEntityId == user.Id);
+            user.Roles = roles.ToList();
+            return new UserProfileResponse(
+                user.Id,
+                user.FirstName,
+                user.LastName,
+                user.Email,
+                user.Mobile,
+                user.Roles.Select(r => r.UserRoleName).ToList());
+        }
     }
 }
