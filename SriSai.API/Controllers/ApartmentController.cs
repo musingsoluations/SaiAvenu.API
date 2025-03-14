@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SriSai.API.DTOs.Building;
 using SriSai.Application.Building.Command;
+using SriSai.Application.Users.Query;
 
 namespace SriSai.API.Controllers
 {
@@ -46,6 +47,15 @@ namespace SriSai.API.Controllers
                 apartmentId => Ok(apartmentId),
                 errors => Problem(string.Join(", ", errors.Select(e => e.Description)))
             );
+        }
+
+        [HttpGet("WithRoles")]
+        [Authorize("Admin")]
+        public async Task<IActionResult> GetUsersWithSpecifiedRoles([FromBody] List<string> roles)
+        {
+            var query = new GetUserWithSpecifiedRoleQuery(roles);
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }
