@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SriSai.API.DTOs.Building;
 using SriSai.Application.Building.Command;
+using SriSai.Application.Building.Query;
 using SriSai.Application.Users.Query;
 
 namespace SriSai.API.Controllers
@@ -25,7 +26,7 @@ namespace SriSai.API.Controllers
             _validator = validator;
         }
 
-        [HttpPost("Apartment")]
+        [HttpPost("AddApartment")]
         [Authorize("AdminOnly")]
         public async Task<IActionResult> CreateApartment(CreateApartmentDto dto)
         {
@@ -44,10 +45,23 @@ namespace SriSai.API.Controllers
             ErrorOr<Guid> result = await _mediator.Send(command);
 
             return result.Match(
-                apartmentId => Ok(apartmentId),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Description)))
+                apartmentId => Ok(result.Value),
+                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
             );
         }
+
+        [HttpGet("GetApartments")]
+        [Authorize("AdminOnly")]
+        public async Task<IActionResult> GetAllApartments()
+        {
+            GetAllApartmentsQuery query = new();
+            var result = await _mediator.Send(query);
+            return result.Match(
+                apartments => Ok(apartments),
+                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
+            );
+        }
+
 
         [HttpPost("userwithroles")]
         [Authorize("AdminOnly")]

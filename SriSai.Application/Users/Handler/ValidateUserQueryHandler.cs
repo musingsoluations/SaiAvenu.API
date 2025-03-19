@@ -38,7 +38,7 @@ namespace SriSai.Application.Users.Handler
                 return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
             }
 
-            IEnumerable<UserRole> roles = await _userRoleRepository.ListAllAsync(z => z.UserEntityId == user.Id);
+            IEnumerable<UserRole> roles = await _userRoleRepository.ListAllForConditionAsync(z => z.UserEntityId == user.Id);
             user.Roles = roles.ToList();
             return new UserProfileResponse(
                 user.Id,

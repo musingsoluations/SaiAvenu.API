@@ -22,7 +22,7 @@ namespace SriSai.Infrastructure.Persistent.Repository
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<IEnumerable<T>> ListAllAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IEnumerable<T>> ListAllForConditionAsync(Expression<Func<T, bool>> predicate)
         {
             return await _context.Set<T>().Where(predicate).AsNoTracking().ToListAsync();
         }
@@ -48,9 +48,33 @@ namespace SriSai.Infrastructure.Persistent.Repository
             return await _context.Set<T>().Where(predicate).AsNoTracking().SingleOrDefaultAsync();
         }
 
+        public async Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        {
+            var query = _context.Set<T>().AsNoTracking();
+            
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+            
+            return await query.Where(predicate).SingleOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<T>> ListAllAsync()
         {
             return await _context.Set<T>().AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> ListAllAsync(params Expression<Func<T, object>>[] includes)
+        {
+            var query = _context.Set<T>().AsNoTracking();
+            
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+            
+            return await query.ToListAsync();
         }
     }
 }
