@@ -27,7 +27,7 @@ namespace SriSai.Application.Collection.Handler
             CancellationToken cancellationToken)
         {
             IEnumerable<ApartmentEntity> apartmentIds =
-                await _apartmentRepository.ListAllForConditionAsync(x =>
+                await _apartmentRepository.FindAllForConditionAsync(x =>
                     request.ApartmentName.Contains(x.ApartmentNumber));
             IEnumerable<ApartmentEntity> apartmentEntities =
                 apartmentIds as ApartmentEntity[] ?? apartmentIds.ToArray();

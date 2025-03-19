@@ -20,7 +20,7 @@ namespace SriSai.Application.Building.Handler
             GetAllApartmentsQuery query,
             CancellationToken cancellationToken)
         {
-            IEnumerable<ApartmentEntity> apartments = await _apartmentRepository.ListAllAsync(
+            IEnumerable<ApartmentEntity> apartments = await _apartmentRepository.ListAllForConditionWithIncludeAsync(
                 x => x.Owner,
                 x => x.Renter
             );

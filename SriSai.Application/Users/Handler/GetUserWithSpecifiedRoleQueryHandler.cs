@@ -24,7 +24,7 @@ namespace SriSai.Application.Users.Handler
                 return new List<UserWithRoleResponse>();
             }
 
-            IEnumerable<UserEntity> users = await _userRepository.ListAllForConditionAsync(x =>
+            IEnumerable<UserEntity> users = await _userRepository.FindAllForConditionAsync(x =>
                 x.Roles.Any(userRole => request.Roles.Contains(userRole.UserRoleName)));
 
             return users

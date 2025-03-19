@@ -22,10 +22,6 @@ namespace SriSai.Infrastructure.Persistent.Repository
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<IEnumerable<T>> ListAllForConditionAsync(Expression<Func<T, bool>> predicate)
-        {
-            return await _context.Set<T>().Where(predicate).AsNoTracking().ToListAsync();
-        }
 
         public async Task<T> AddAsync(T entity)
         {
@@ -48,32 +44,53 @@ namespace SriSai.Infrastructure.Persistent.Repository
             return await _context.Set<T>().Where(predicate).AsNoTracking().SingleOrDefaultAsync();
         }
 
-        public async Task<T?> FindOneAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+        public async Task<T?> FindOneWithIncludeAsync(Expression<Func<T, bool>> predicate,
+            params Expression<Func<T, object>>[] includes)
         {
-            var query = _context.Set<T>().AsNoTracking();
-            
+            IQueryable<T> query = _context.Set<T>().AsNoTracking();
+
             if (includes != null)
             {
                 query = includes.Aggregate(query, (current, include) => current.Include(include));
             }
-            
+
             return await query.Where(predicate).SingleOrDefaultAsync();
         }
+
+        public async Task<IEnumerable<T>> FindAllWithIncludeAsync(Expression<Func<T, bool>> predicate,
+            params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _context.Set<T>().AsNoTracking();
+
+            if (includes != null)
+            {
+                query = includes.Aggregate(query, (current, include) => current.Include(include));
+            }
+
+            return await query.Where(predicate).ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> FindAllForConditionAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().Where(predicate).AsNoTracking().ToListAsync();
+        }
+
 
         public async Task<IEnumerable<T>> ListAllAsync()
         {
             return await _context.Set<T>().AsNoTracking().ToListAsync();
         }
 
-        public async Task<IEnumerable<T>> ListAllAsync(params Expression<Func<T, object>>[] includes)
+        public async Task<IEnumerable<T>> ListAllForConditionWithIncludeAsync(
+            params Expression<Func<T, object>>[] includes)
         {
-            var query = _context.Set<T>().AsNoTracking();
-            
+            IQueryable<T> query = _context.Set<T>().AsNoTracking();
+
             if (includes != null)
             {
                 query = includes.Aggregate(query, (current, include) => current.Include(include));
             }
-            
+
             return await query.ToListAsync();
         }
     }

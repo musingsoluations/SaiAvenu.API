@@ -1,7 +1,10 @@
+using ErrorOr;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SriSai.Application.Collection.Command;
 using SriSai.API.DTOs.Collection;
+using SriSai.Application.Collection.Command;
+using SriSai.Application.Collection.Dtos;
+using SriSai.Application.Collection.Query;
 
 namespace SriSai.API.Controllers
 {
@@ -16,10 +19,22 @@ namespace SriSai.API.Controllers
             _mediator = mediator;
         }
 
+        [HttpGet("unpaid")]
+        //[Authorize("AdminOnly")]
+        [ProducesResponseType(typeof(List<UnpaidFeeDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUnpaidFees()
+        {
+            ErrorOr<List<UnpaidFeeResultDto>> result = await _mediator.Send(new GetUnpaidFeesQuery());
+            return result.Match(
+                fees => Ok(fees),
+                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
+            );
+        }
+
         [HttpPost("demand")]
         public async Task<IActionResult> CreateCollectionDemand(CreateCollectionDemandDto dto)
         {
-            var command = new CreateCollectionDemandCommand
+            CreateCollectionDemandCommand command = new()
             {
                 ApartmentName = dto.ApartmentName,
                 Amount = dto.Amount,
@@ -31,7 +46,7 @@ namespace SriSai.API.Controllers
                 Comment = dto.Comment
             };
 
-            var result = await _mediator.Send(command);
+            ErrorOr<IList<Guid>> result = await _mediator.Send(command);
 
             return result.Match(
                 collectionIds => Ok(collectionIds),

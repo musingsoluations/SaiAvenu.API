@@ -39,7 +39,7 @@ namespace SriSai.Application.Users.Handler
             }
 
             IEnumerable<UserRoleEntity> roles =
-                await _userRoleRepository.ListAllForConditionAsync(z => z.UserEntityId == user.Id);
+                await _userRoleRepository.FindAllForConditionAsync(z => z.UserEntityId == user.Id);
             user.Roles = roles.ToList();
             return new UserProfileResponse(
                 user.Id,
