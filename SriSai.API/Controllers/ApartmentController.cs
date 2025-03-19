@@ -62,6 +62,17 @@ namespace SriSai.API.Controllers
             );
         }
 
+        [HttpGet("GetApartmentNumbers")]
+        [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetApartmentNumbers()
+        {
+            var result = await _mediator.Send(new GetApartmentNumbersQuery());
+            return result.Match(
+                numbers => Ok(numbers),
+                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
+            );
+        }
+
 
         [HttpPost("userwithroles")]
         [Authorize("AdminOnly")]
