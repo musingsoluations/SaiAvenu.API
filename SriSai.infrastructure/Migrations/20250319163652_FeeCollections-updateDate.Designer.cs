@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SriSai.infrastructure.Persistent.DbContext;
 
@@ -11,9 +12,11 @@ using SriSai.infrastructure.Persistent.DbContext;
 namespace SriSai.infrastructure.Migrations
 {
     [DbContext(typeof(SriSaiDbContext))]
-    partial class SriSaiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250319163652_FeeCollections-updateDate")]
+    partial class FeeCollectionsupdateDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -72,12 +75,10 @@ namespace SriSai.infrastructure.Migrations
             modelBuilder.Entity("SriSai.Domain.Entity.Collection.FeeCollectionEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(8, 2)
-                        .HasColumnType("decimal(8,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("ApartmentId")
                         .HasColumnType("uniqueidentifier");
@@ -126,8 +127,6 @@ namespace SriSai.infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApartmentId");
 
                     b.ToTable("FeeCollection", (string)null);
                 });
@@ -261,8 +260,8 @@ namespace SriSai.infrastructure.Migrations
             modelBuilder.Entity("SriSai.Domain.Entity.Collection.FeeCollectionEntity", b =>
                 {
                     b.HasOne("SriSai.Domain.Entity.Building.ApartmentEntity", "Apartment")
-                        .WithMany("FeeCollections")
-                        .HasForeignKey("ApartmentId")
+                        .WithMany()
+                        .HasForeignKey("Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -276,11 +275,6 @@ namespace SriSai.infrastructure.Migrations
                         .HasForeignKey("UserEntityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("SriSai.Domain.Entity.Building.ApartmentEntity", b =>
-                {
-                    b.Navigation("FeeCollections");
                 });
 
             modelBuilder.Entity("SriSai.Domain.Entity.Users.UserEntity", b =>
