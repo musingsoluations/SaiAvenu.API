@@ -10,11 +10,11 @@ namespace SriSai.Application.Building.Handler
     public class CreateApartmentCommandHandler
         : IRequestHandler<CreateApartmentCommand, ErrorOr<Guid>>
     {
-        private readonly IRepository<Apartment> _apartmentRepository;
+        private readonly IRepository<ApartmentEntity> _apartmentRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public CreateApartmentCommandHandler(
-            IRepository<Apartment> apartmentRepository,
+            IRepository<ApartmentEntity> apartmentRepository,
             IUnitOfWork unitOfWork)
         {
             _apartmentRepository = apartmentRepository;
@@ -25,20 +25,20 @@ namespace SriSai.Application.Building.Handler
             CreateApartmentCommand command,
             CancellationToken cancellationToken)
         {
-            Apartment? existingApartment = await _apartmentRepository
+            ApartmentEntity? existingApartment = await _apartmentRepository
                 .FindOneAsync(x => x.ApartmentNumber == command.ApartmentNumber);
             if (existingApartment is not null)
             {
                 return Error.Conflict(PreDefinedErrorsForBuilding.ApartmentAlreadyExist);
             }
 
-            Apartment apartment = new()
+            ApartmentEntity apartmentEntity = new()
             {
                 ApartmentNumber = command.ApartmentNumber, OwnerId = command.OwnerId, RenterId = command.RenterId
             };
-            await _apartmentRepository.AddAsync(apartment);
+            await _apartmentRepository.AddAsync(apartmentEntity);
             await _unitOfWork.SaveChangesAsync();
-            return apartment.Id;
+            return apartmentEntity.Id;
         }
     }
 }

@@ -27,13 +27,13 @@ namespace SriSai.Domain.Entity.Users
         public string Password { get; private set; } = string.Empty;
         public string Mobile { get; private set; } = string.Empty;
         public bool IsUserActive { get; private set; } = true;
-        public IList<UserRole> Roles { get; set; } = new List<UserRole>();
+        public IList<UserRoleEntity> Roles { get; set; } = new List<UserRoleEntity>();
 
-        public ICollection<Apartment> OwnedApartments { get; set; }
-        public ICollection<Apartment> RentedApartments { get; set; }
+        public ICollection<ApartmentEntity> OwnedApartments { get; set; }
+        public ICollection<ApartmentEntity> RentedApartments { get; set; }
 
         public UserEntity AddNewUser(string firstName, string lastName, string email, string password, string mobile,
-            IList<UserRole> userRoles, Guid currentUserId)
+            IList<UserRoleEntity> userRoles, Guid currentUserId)
         {
             FirstName = firstName;
             LastName = lastName;
@@ -48,11 +48,11 @@ namespace SriSai.Domain.Entity.Users
             return this;
         }
 
-        public void UpdateUserRole(UserRole newRole)
+        public void UpdateUserRole(UserRoleEntity newRoleEntity)
         {
-            if (!Roles.Contains(newRole))
+            if (!Roles.Contains(newRoleEntity))
             {
-                Roles.Add(newRole);
+                Roles.Add(newRoleEntity);
             }
         }
 
@@ -110,7 +110,7 @@ namespace SriSai.Domain.Entity.Users
         }
 
         public ErrorOr<UserEntity> CreateNewUser(string firstName, string lastName, string email, string password,
-            string mobile, IList<UserRole> userRoles, UserEntity currentUser)
+            string mobile, IList<UserRoleEntity> userRoles, UserEntity currentUser)
         {
             if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName) || string.IsNullOrEmpty(email) ||
                 string.IsNullOrEmpty(password) ||

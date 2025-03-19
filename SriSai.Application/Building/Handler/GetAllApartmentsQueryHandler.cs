@@ -9,9 +9,9 @@ namespace SriSai.Application.Building.Handler
     public class GetAllApartmentsQueryHandler
         : IRequestHandler<GetAllApartmentsQuery, ErrorOr<List<ListApartmentsQueryData>>>
     {
-        private readonly IRepository<Apartment> _apartmentRepository;
+        private readonly IRepository<ApartmentEntity> _apartmentRepository;
 
-        public GetAllApartmentsQueryHandler(IRepository<Apartment> apartmentRepository)
+        public GetAllApartmentsQueryHandler(IRepository<ApartmentEntity> apartmentRepository)
         {
             _apartmentRepository = apartmentRepository;
         }
@@ -20,7 +20,7 @@ namespace SriSai.Application.Building.Handler
             GetAllApartmentsQuery query,
             CancellationToken cancellationToken)
         {
-            var apartments = await _apartmentRepository.ListAllAsync(
+            IEnumerable<ApartmentEntity> apartments = await _apartmentRepository.ListAllAsync(
                 x => x.Owner,
                 x => x.Renter
             );
@@ -30,7 +30,7 @@ namespace SriSai.Application.Building.Handler
                 return Error.NotFound("No apartments found");
             }
 
-            var apartmentsData = apartments.Select(x => new ListApartmentsQueryData
+            List<ListApartmentsQueryData> apartmentsData = apartments.Select(x => new ListApartmentsQueryData
             {
                 ApartmentNumber = x.ApartmentNumber,
                 OwnerId = x.OwnerId,
@@ -42,4 +42,4 @@ namespace SriSai.Application.Building.Handler
             return apartmentsData;
         }
     }
-} 
+}

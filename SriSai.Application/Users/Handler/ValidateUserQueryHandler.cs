@@ -13,10 +13,10 @@ namespace SriSai.Application.Users.Handler
     {
         private readonly IVerifyPassword _passwordVerifier;
         private readonly IRepository<UserEntity> _userRepository;
-        private readonly IRepository<UserRole> _userRoleRepository;
+        private readonly IRepository<UserRoleEntity> _userRoleRepository;
 
         public ValidateUserQueryHandler(IRepository<UserEntity> userRepository, IVerifyPassword passwordVerifier,
-            IRepository<UserRole> userRoleRepository)
+            IRepository<UserRoleEntity> userRoleRepository)
         {
             _userRepository = userRepository;
             _passwordVerifier = passwordVerifier;
@@ -38,7 +38,8 @@ namespace SriSai.Application.Users.Handler
                 return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
             }
 
-            IEnumerable<UserRole> roles = await _userRoleRepository.ListAllForConditionAsync(z => z.UserEntityId == user.Id);
+            IEnumerable<UserRoleEntity> roles =
+                await _userRoleRepository.ListAllForConditionAsync(z => z.UserEntityId == user.Id);
             user.Roles = roles.ToList();
             return new UserProfileResponse(
                 user.Id,

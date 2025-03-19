@@ -51,8 +51,8 @@ namespace SriSai.API.Controllers
 
             string? userGuid = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             // Create UserRole objects from string roles
-            List<UserRole> roles = createUserDto.Roles.Select(roleString =>
-                new UserRole { UserRoleName = roleString }).ToList();
+            List<UserRoleEntity> roles = createUserDto.Roles.Select(roleString =>
+                new UserRoleEntity { UserRoleName = roleString }).ToList();
 
             CreateUserCommand command = new()
             {
