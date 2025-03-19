@@ -27,7 +27,7 @@ namespace SriSai.Application.Users.Handler
             try
             {
                 UserEntity? userExist = await _userRepository.FindOneAsync(x => x.Mobile == request.Mobile);
-                if (userExist == null)
+                if (userExist != null)
                 {
                     return Error.Conflict(PreDefinedErrorsForUsers.UserAlreadyExist);
                 }

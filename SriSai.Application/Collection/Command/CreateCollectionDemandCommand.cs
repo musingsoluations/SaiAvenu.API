@@ -10,7 +10,7 @@ namespace SriSai.Application.Collection.Command
         public decimal Amount { get; set; }
         public DateTime RequestForDate { get; set; }
         public DateTime DueDate { get; set; }
-        public DateTime PaidDate { get; set; }
+        public DateTime? PaidDate { get; set; }
         public bool IsPaid { get; set; }
         public CollectionType ForWhat { get; set; }
         public string? Comment { get; set; }
