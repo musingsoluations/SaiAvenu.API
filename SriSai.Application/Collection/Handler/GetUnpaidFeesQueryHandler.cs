@@ -26,6 +26,7 @@ namespace SriSai.Application.Collection.Handler
                 q => q.Apartment);
 
             return fees.Select(f => new UnpaidFeeResultDto(
+                f.Id.ToString(),
                 f.Apartment.ApartmentNumber,
                 f.Amount,
                 f.RequestForDate,

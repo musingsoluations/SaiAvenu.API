@@ -1,6 +1,7 @@
 namespace SriSai.Application.Collection.Dtos;
 
 public record UnpaidFeeResultDto(
+    string Id,
     string ApartmentNumber,
     decimal Amount,
     DateTime RequestForDate,
