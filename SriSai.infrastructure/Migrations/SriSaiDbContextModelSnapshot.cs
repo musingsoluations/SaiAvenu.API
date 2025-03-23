@@ -101,20 +101,11 @@ namespace SriSai.infrastructure.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("FeeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("ForWhat")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<bool>("IsPaid")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("PaidDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("RequestForDate")
                         .HasColumnType("datetime2");
@@ -130,6 +121,50 @@ namespace SriSai.infrastructure.Migrations
                     b.HasIndex("ApartmentId");
 
                     b.ToTable("FeeCollection", (string)null);
+                });
+
+            modelBuilder.Entity("SriSai.Domain.Entity.Collection.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("FeeCollectionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("PaidDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeeCollectionId");
+
+                    b.ToTable("Payment", (string)null);
                 });
 
             modelBuilder.Entity("SriSai.Domain.Entity.Users.UserEntity", b =>
@@ -269,6 +304,17 @@ namespace SriSai.infrastructure.Migrations
                     b.Navigation("Apartment");
                 });
 
+            modelBuilder.Entity("SriSai.Domain.Entity.Collection.Payment", b =>
+                {
+                    b.HasOne("SriSai.Domain.Entity.Collection.FeeCollectionEntity", "FeeCollection")
+                        .WithMany("Payments")
+                        .HasForeignKey("FeeCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeeCollection");
+                });
+
             modelBuilder.Entity("SriSai.Domain.Entity.Users.UserRoleEntity", b =>
                 {
                     b.HasOne("SriSai.Domain.Entity.Users.UserEntity", null)
@@ -281,6 +327,11 @@ namespace SriSai.infrastructure.Migrations
             modelBuilder.Entity("SriSai.Domain.Entity.Building.ApartmentEntity", b =>
                 {
                     b.Navigation("FeeCollections");
+                });
+
+            modelBuilder.Entity("SriSai.Domain.Entity.Collection.FeeCollectionEntity", b =>
+                {
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("SriSai.Domain.Entity.Users.UserEntity", b =>

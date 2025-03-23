@@ -22,13 +22,13 @@ namespace SriSai.Application.Collection.Handler
             CancellationToken cancellationToken)
         {
             IEnumerable<FeeCollectionEntity> fees = await _repository.FindAllWithIncludeAsync(
-                f => !f.IsPaid,
-                q => q.Apartment);
+                f => f.Amount > f.Payments.Sum(p => p.Amount), q => q.Apartment, q => q.Payments);
 
             return fees.Select(f => new UnpaidFeeResultDto(
                 f.Id.ToString(),
                 f.Apartment.ApartmentNumber,
                 f.Amount,
+                f.RemainingAmount,
                 f.RequestForDate,
                 f.DueDate,
                 f.ForWhat,

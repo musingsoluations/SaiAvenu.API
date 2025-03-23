@@ -1,10 +1,14 @@
-namespace SriSai.Application.Collection.Dtos;
+using SriSai.Domain.Entity.Collection;
 
-public record UnpaidFeeResultDto(
-    string Id,
-    string ApartmentNumber,
-    decimal Amount,
-    DateTime RequestForDate,
-    DateTime DueDate,
-    SriSai.Domain.Entity.Collection.CollectionType ForWhat,
-    string? Comment);
+namespace SriSai.Application.Collection.Dtos
+{
+    public record UnpaidFeeResultDto(
+        string Id,
+        string ApartmentNumber,
+        decimal Amount,
+        decimal RemainingAmount,
+        DateTime RequestForDate,
+        DateTime DueDate,
+        CollectionType ForWhat,
+        string? Comment);
+}

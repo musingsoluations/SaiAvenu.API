@@ -43,8 +43,6 @@ namespace SriSai.Application.Collection.Handler
                         Amount = request.Amount,
                         RequestForDate = request.RequestForDate,
                         DueDate = request.DueDate,
-                        PaidDate = request.PaidDate,
-                        IsPaid = request.IsPaid,
                         ForWhat = request.ForWhat,
                         Comment = request.Comment
                     };
