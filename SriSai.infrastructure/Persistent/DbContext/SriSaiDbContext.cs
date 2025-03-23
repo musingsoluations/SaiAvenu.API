@@ -14,6 +14,7 @@ namespace SriSai.infrastructure.Persistent.DbContext
         public DbSet<UserEntity> Users { get; set; }
         public DbSet<ApartmentEntity> Apartments { get; set; }
         public DbSet<FeeCollectionEntity> FeeCollections { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

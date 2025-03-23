@@ -73,5 +73,18 @@ namespace SriSai.API.Controllers
                 paymentId => Ok(paymentId),
                 errors => Problem(string.Join(", ", errors)));
         }
+
+        [HttpPost("collection-expense")]
+        [Authorize]
+        public async Task<IActionResult> GetCollectionExpense([FromBody] int year)
+        {
+            GetCollectionExpenseQuery query = new() { Year = year };
+
+            ErrorOr<List<ChartDataItem>> result = await _mediator.Send(query);
+            return result.Match(
+                chartDataItems => Ok(chartDataItems),
+                errors => Problem(string.Join(", ", errors)));
+            ;
+        }
     }
 }
