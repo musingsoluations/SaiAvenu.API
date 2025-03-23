@@ -53,11 +53,11 @@ namespace SriSai.API.Controllers
                 errors => Problem(string.Join(", ", errors.Select(e => e.Code))));
         }
 
-        [HttpPost("payments")]
+        [HttpPost("payment")]
         [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
         {
-            var command = new CreatePaymentCommand(
+            CreatePaymentCommand command = new(
                 dto.Amount,
                 dto.PaymentDate,
                 dto.FeeCollectionId,
