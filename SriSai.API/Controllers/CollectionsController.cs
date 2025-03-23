@@ -1,5 +1,6 @@
 using ErrorOr;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SriSai.API.DTOs.Collection;
 using SriSai.Application.Collection.Command;
@@ -20,6 +21,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpGet("unpaid")]
+        [Authorize("AdminOnly")]
         //[Authorize("AdminOnly")]
         [ProducesResponseType(typeof(List<UnpaidFeeDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetUnpaidFees()
@@ -32,6 +34,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpPost("demand")]
+        [Authorize("AdminOnly")]
         public async Task<IActionResult> CreateCollectionDemand(CreateCollectionDemandDto dto)
         {
             CreateCollectionDemandCommand command = new()
@@ -54,6 +57,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpPost("payment")]
+        [Authorize("AdminOnly")]
         [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
         {

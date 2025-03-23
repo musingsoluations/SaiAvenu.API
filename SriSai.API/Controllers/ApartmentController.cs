@@ -55,7 +55,7 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> GetAllApartments()
         {
             GetAllApartmentsQuery query = new();
-            var result = await _mediator.Send(query);
+            ErrorOr<List<ListApartmentsQueryData>> result = await _mediator.Send(query);
             return result.Match(
                 apartments => Ok(apartments),
                 errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
@@ -63,10 +63,11 @@ namespace SriSai.API.Controllers
         }
 
         [HttpGet("GetApartmentNumbers")]
+        [Authorize("AdminOnly")]
         [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetApartmentNumbers()
         {
-            var result = await _mediator.Send(new GetApartmentNumbersQuery());
+            ErrorOr<List<string>> result = await _mediator.Send(new GetApartmentNumbersQuery());
             return result.Match(
                 numbers => Ok(numbers),
                 errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
