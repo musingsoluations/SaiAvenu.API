@@ -22,24 +22,35 @@ namespace SriSai.Application.Collection.Handler
             CancellationToken cancellationToken)
         {
             IEnumerable<FeeCollectionEntity> result = await _feeCollectionRepo.FindAllWithIncludeAsync(
-                x => x.RequestForDate.Year == request.Year, x => x.Payments);
+                x => x.RequestForDate.Year == request.Year,
+                x => x.Payments);
 
             List<ChartDataItem> chartDataItems = new();
-            List<string> months = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames.Take(12).ToList();
+            List<string> months = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames
+                .Take(12)
+                .ToList();
+
             foreach (string month in months)
             {
                 ChartDataItem chartDataItem = new() { Name = month, Series = new List<SeriesItem>() };
-                IEnumerable<FeeCollectionEntity> monthData =
-                    result.Where(x => x.RequestForDate.ToString("MMMM") == month);
-                SeriesItem seriesItemDemand = new() { Name = "Total Demand", Value = monthData.Sum(x => x.Amount) };
-                SeriesItem seriesItemCollected = new()
-                {
-                    Name = "Total Collection", Value = monthData.Sum(x => x.Payments.Sum(p => p.Amount))
-                };
 
-                chartDataItem.Series.Add(seriesItemDemand);
-                chartDataItem.Series.Add(seriesItemCollected);
-                if (seriesItemDemand.Value > 0 || seriesItemCollected.Value > 0)
+                // Get demand for the month (based on RequestForDate)
+                decimal monthDemand = result
+                    .Where(x => x.RequestForDate.ToString("MMMM") == month)
+                    .Sum(x => x.Amount);
+
+                // Get collections for the month (based on Payment.PaidDate)
+                decimal monthCollections = result
+                    .SelectMany(x => x.Payments)
+                    .Where(p => p.PaidDate.ToString("MMMM") == month &&
+                                p.PaidDate.Year == request.Year)
+                    .Sum(p => p.Amount);
+
+                chartDataItem.Series.Add(new SeriesItem { Name = "Total Demand", Value = monthDemand });
+
+                chartDataItem.Series.Add(new SeriesItem { Name = "Total Collection", Value = monthCollections });
+
+                if (monthDemand > 0 || monthCollections > 0)
                 {
                     chartDataItems.Add(chartDataItem);
                 }
