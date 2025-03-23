@@ -52,5 +52,22 @@ namespace SriSai.API.Controllers
                 collectionIds => Ok(collectionIds),
                 errors => Problem(string.Join(", ", errors.Select(e => e.Code))));
         }
+
+        [HttpPost("payments")]
+        [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
+        public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
+        {
+            var command = new CreatePaymentCommand(
+                dto.Amount,
+                dto.PaymentDate,
+                dto.FeeCollectionId,
+                dto.PaymentMethod);
+
+            ErrorOr<Guid> result = await _mediator.Send(command);
+
+            return result.Match(
+                paymentId => Ok(paymentId),
+                errors => Problem(string.Join(", ", errors)));
+        }
     }
 }

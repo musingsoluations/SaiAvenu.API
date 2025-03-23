@@ -8,5 +8,7 @@ namespace SriSai.Domain.Entity.Collection
         public DateTime PaidDate { get; set; }
         public Guid FeeCollectionId { get; set; }
         public FeeCollectionEntity FeeCollection { get; set; }
+
+        public string PaymentMethod { get; set; }
     }
 }
