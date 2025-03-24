@@ -29,7 +29,11 @@ namespace SriSai.API.Controllers
             ErrorOr<List<UnpaidFeeResultDto>> result = await _mediator.Send(new GetUnpaidFeesQuery());
             return result.Match(
                 fees => Ok(fees),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
             );
         }
 
@@ -52,7 +56,13 @@ namespace SriSai.API.Controllers
 
             return result.Match(
                 collectionIds => Ok(collectionIds),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Code))));
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
+
+                );
         }
 
         [HttpPost("payment")]
@@ -70,7 +80,13 @@ namespace SriSai.API.Controllers
 
             return result.Match(
                 paymentId => Ok(paymentId),
-                errors => Problem(string.Join(", ", errors)));
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
+
+                );
         }
 
         [HttpPost("collection-expense")]
@@ -82,7 +98,14 @@ namespace SriSai.API.Controllers
             ErrorOr<List<ChartDataItem>> result = await _mediator.Send(query);
             return result.Match(
                 chartDataItems => Ok(chartDataItems),
-                errors => Problem(string.Join(", ", errors)));
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
+
+
+                );
             ;
         }
     }

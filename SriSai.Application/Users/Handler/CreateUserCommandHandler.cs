@@ -11,22 +11,22 @@ namespace SriSai.Application.Users.Handler
 {
     public class CreateUserCommandHandler(
         IUnitOfWork unitOfWork,
-        IRepository<UserEntity> userRepository,
         IDateTimeProvider dateTimeProvider,
         IHashPassword hashPassword)
         : IRequestHandler<CreateUserCommand, ErrorOr<Guid>>
     {
         private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
         private readonly IHashPassword _hashPassword = hashPassword;
+
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IRepository<UserEntity> _userRepository = userRepository;
 
         public async Task<ErrorOr<Guid>> Handle(CreateUserCommand request,
             CancellationToken cancellationToken)
         {
             try
             {
-                UserEntity? userExist = await _userRepository.FindOneAsync(x => x.Mobile == request.Mobile);
+                UserEntity? userExist =
+                    await _unitOfWork.Repository<UserEntity>().FindOneAsync(x => x.Mobile == request.Mobile);
                 if (userExist != null)
                 {
                     return Error.Conflict(PreDefinedErrorsForUsers.UserAlreadyExist);
@@ -36,7 +36,7 @@ namespace SriSai.Application.Users.Handler
                 string hashedPassword = _hashPassword.HashPassword(request.Password);
                 user.AddNewUser(request.FirstName, request.LastName, request.Email, hashedPassword, request.Mobile,
                     request.Roles, request.CreatedById);
-                UserEntity result = await _userRepository.AddAsync(user);
+                UserEntity result = await _unitOfWork.Repository<UserEntity>().AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
                 return user.Id;
             }

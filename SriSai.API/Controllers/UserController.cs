@@ -128,8 +128,6 @@ namespace SriSai.API.Controllers
                 user => Ok(result.Value),
                 errors => new ObjectResult(new ProblemDetails
                 {
-                    Status = 400,
-                    Title = "Validation Error",
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 }));
@@ -151,8 +149,6 @@ namespace SriSai.API.Controllers
                 }),
                 errors => new ObjectResult(new ProblemDetails
                 {
-                    Status = 400,
-                    Title = "Validation Error",
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 }));

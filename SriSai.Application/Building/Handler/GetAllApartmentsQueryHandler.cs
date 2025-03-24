@@ -9,18 +9,18 @@ namespace SriSai.Application.Building.Handler
     public class GetAllApartmentsQueryHandler
         : IRequestHandler<GetAllApartmentsQuery, ErrorOr<List<ListApartmentsQueryData>>>
     {
-        private readonly IRepository<ApartmentEntity> _apartmentRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetAllApartmentsQueryHandler(IRepository<ApartmentEntity> apartmentRepository)
+        public GetAllApartmentsQueryHandler(IUnitOfWork unitOfWork)
         {
-            _apartmentRepository = apartmentRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ErrorOr<List<ListApartmentsQueryData>>> Handle(
             GetAllApartmentsQuery query,
             CancellationToken cancellationToken)
         {
-            IEnumerable<ApartmentEntity> apartments = await _apartmentRepository.ListAllForConditionWithIncludeAsync(
+            IEnumerable<ApartmentEntity> apartments = await _unitOfWork.Repository<ApartmentEntity>().ListAllForConditionWithIncludeAsync(
                 x => x.Owner,
                 x => x.Renter
             );

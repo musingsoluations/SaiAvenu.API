@@ -9,18 +9,19 @@ namespace SriSai.Application.Building.Handler;
 public class GetApartmentNumbersQueryHandler
     : IRequestHandler<GetApartmentNumbersQuery, ErrorOr<List<string>>>
 {
-    private readonly IRepository<ApartmentEntity> _apartmentRepository;
+    //private readonly IRepository<ApartmentEntity> _apartmentRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public GetApartmentNumbersQueryHandler(IRepository<ApartmentEntity> apartmentRepository)
+    public GetApartmentNumbersQueryHandler(IUnitOfWork unitOfWork)
     {
-        _apartmentRepository = apartmentRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ErrorOr<List<string>>> Handle(
         GetApartmentNumbersQuery request,
         CancellationToken cancellationToken)
     {
-        var apartments = await _apartmentRepository.ListAllAsync();
+        var apartments = await _unitOfWork.Repository<ApartmentEntity>().ListAllAsync();
         return apartments.Select(a => a.ApartmentNumber).ToList();
     }
 }

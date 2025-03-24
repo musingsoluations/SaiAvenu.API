@@ -9,12 +9,10 @@ namespace SriSai.Application.Collection.Handler
     public class CreatePaymentCommandHandler :
         IRequestHandler<CreatePaymentCommand, ErrorOr<Guid>>
     {
-        private readonly IRepository<Payment> _paymentRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public CreatePaymentCommandHandler(IRepository<Payment> paymentRepository, IUnitOfWork unitOfWork)
+        public CreatePaymentCommandHandler(IUnitOfWork unitOfWork)
         {
-            _paymentRepository = paymentRepository;
             _unitOfWork = unitOfWork;
         }
         public async Task<ErrorOr<Guid>> Handle(
@@ -28,7 +26,7 @@ namespace SriSai.Application.Collection.Handler
                 FeeCollectionId = command.FeeCollectionId,
                 PaymentMethod = command.PaymentMethod,
             };
-            await _paymentRepository.AddAsync(payment);
+            await _unitOfWork.Repository<Payment>().AddAsync(payment);
             await _unitOfWork.SaveChangesAsync();
             return payment.Id;
         }

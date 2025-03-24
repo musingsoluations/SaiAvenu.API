@@ -11,17 +11,19 @@ namespace SriSai.Application.Collection.Handler
     public class
         GetCollectionExpenseQueryHandler : IRequestHandler<GetCollectionExpenseQuery, ErrorOr<List<ChartDataItem>>>
     {
-        private readonly IRepository<FeeCollectionEntity> _feeCollectionRepo;
+        //private readonly IRepository<FeeCollectionEntity> _feeCollectionRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetCollectionExpenseQueryHandler(IRepository<FeeCollectionEntity> feeCollectionRepo)
+        public GetCollectionExpenseQueryHandler(IUnitOfWork unitOfWork)
         {
-            _feeCollectionRepo = feeCollectionRepo;
+            _unitOfWork = unitOfWork;
         }
+
 
         public async Task<ErrorOr<List<ChartDataItem>>> Handle(GetCollectionExpenseQuery request,
             CancellationToken cancellationToken)
         {
-            IEnumerable<FeeCollectionEntity> result = await _feeCollectionRepo.FindAllWithIncludeAsync(
+            IEnumerable<FeeCollectionEntity> result = await _unitOfWork.Repository<FeeCollectionEntity>().FindAllWithIncludeAsync(
                 x => x.RequestForDate.Year == request.Year,
                 x => x.Payments);
 

@@ -10,18 +10,18 @@ namespace SriSai.Application.Collection.Handler
     public class GetUnpaidFeesQueryHandler
         : IRequestHandler<GetUnpaidFeesQuery, ErrorOr<List<UnpaidFeeResultDto>>>
     {
-        private readonly IRepository<FeeCollectionEntity> _repository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetUnpaidFeesQueryHandler(IRepository<FeeCollectionEntity> repository)
+        public GetUnpaidFeesQueryHandler(IUnitOfWork unitOfWork)
         {
-            _repository = repository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ErrorOr<List<UnpaidFeeResultDto>>> Handle(
             GetUnpaidFeesQuery request,
             CancellationToken cancellationToken)
         {
-            IEnumerable<FeeCollectionEntity> fees = await _repository.FindAllWithIncludeAsync(
+            IEnumerable<FeeCollectionEntity> fees = await _unitOfWork.Repository<FeeCollectionEntity>().FindAllWithIncludeAsync(
                 f => f.Amount > f.Payments.Sum(p => p.Amount), q => q.Apartment, q => q.Payments);
 
             return fees.Select(f => new UnpaidFeeResultDto(

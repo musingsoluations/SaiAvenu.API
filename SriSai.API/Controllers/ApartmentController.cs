@@ -46,7 +46,11 @@ namespace SriSai.API.Controllers
 
             return result.Match(
                 apartmentId => Ok(result.Value),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
             );
         }
 
@@ -58,7 +62,11 @@ namespace SriSai.API.Controllers
             ErrorOr<List<ListApartmentsQueryData>> result = await _mediator.Send(query);
             return result.Match(
                 apartments => Ok(apartments),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
             );
         }
 
@@ -70,7 +78,11 @@ namespace SriSai.API.Controllers
             ErrorOr<List<string>> result = await _mediator.Send(new GetApartmentNumbersQuery());
             return result.Match(
                 numbers => Ok(numbers),
-                errors => Problem(string.Join(", ", errors.Select(e => e.Code)))
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
             );
         }
 

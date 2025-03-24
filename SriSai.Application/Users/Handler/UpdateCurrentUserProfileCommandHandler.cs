@@ -13,13 +13,14 @@ namespace SriSai.Application.Users.Handler
         UpdateCurrentUserProfileCommandHandler : IRequestHandler<UpdateCurrentUserProfileCommand, ErrorOr<UserProfile>>
     {
         private readonly IHashPassword _hashPassword;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IRepository<UserEntity> _userRepository;
 
-        public UpdateCurrentUserProfileCommandHandler(IRepository<UserEntity> userRepository, IUnitOfWork unitOfWork,
+        private readonly IUnitOfWork _unitOfWork;
+        //private readonly IRepository<UserEntity> _userRepository;
+
+        public UpdateCurrentUserProfileCommandHandler(IUnitOfWork unitOfWork,
             IHashPassword hashPassword)
         {
-            _userRepository = userRepository;
+            // _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _hashPassword = hashPassword;
         }
@@ -27,7 +28,7 @@ namespace SriSai.Application.Users.Handler
         public async Task<ErrorOr<UserProfile>> Handle(UpdateCurrentUserProfileCommand request,
             CancellationToken cancellationToken)
         {
-            UserEntity? currentData = await _userRepository.GetByIdAsync(request.Id);
+            UserEntity? currentData = await _unitOfWork.Repository<UserEntity>().GetByIdAsync(request.Id);
             if (currentData is null)
             {
                 return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
@@ -45,7 +46,8 @@ namespace SriSai.Application.Users.Handler
                 currentData.UpdatePassword(request.Password);
             }
 
-            UserEntity? findUserByMobile = await _userRepository.FindOneAsync(x => x.Mobile == request.Mobile);
+            UserEntity? findUserByMobile =
+                await _unitOfWork.Repository<UserEntity>().FindOneAsync(x => x.Mobile == request.Mobile);
             if (findUserByMobile is not null && findUserByMobile.Id != currentData.Id)
             {
                 return Error.Validation(PreDefinedErrorsForUsers.MobileAlreadyExists);
@@ -56,7 +58,7 @@ namespace SriSai.Application.Users.Handler
             currentData.UpdateEmail(request.Email);
             currentData.UpdateMobile(request.Mobile);
             currentData.UpdateEntityInternals(request.Id);
-            await _userRepository.UpdateAsync(currentData);
+            await _unitOfWork.Repository<UserEntity>().UpdateAsync(currentData);
             await _unitOfWork.SaveChangesAsync();
 
             return new UserProfile(

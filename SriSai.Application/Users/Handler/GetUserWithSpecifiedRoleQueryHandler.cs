@@ -8,11 +8,11 @@ namespace SriSai.Application.Users.Handler
     public class GetUserWithSpecifiedRoleQueryHandler
         : IRequestHandler<GetUserWithSpecifiedRoleQuery, List<UserWithRoleResponse>>
     {
-        private readonly IRepository<UserEntity> _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GetUserWithSpecifiedRoleQueryHandler(IRepository<UserEntity> userRepository)
+        public GetUserWithSpecifiedRoleQueryHandler(IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<List<UserWithRoleResponse>> Handle(
@@ -24,7 +24,7 @@ namespace SriSai.Application.Users.Handler
                 return new List<UserWithRoleResponse>();
             }
 
-            IEnumerable<UserEntity> users = await _userRepository.FindAllForConditionAsync(x =>
+            IEnumerable<UserEntity> users = await _unitOfWork.Repository<UserEntity>().FindAllForConditionAsync(x =>
                 x.Roles.Any(userRole => request.Roles.Contains(userRole.UserRoleName)));
 
             return users

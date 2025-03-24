@@ -10,25 +10,22 @@ namespace SriSai.Application.Collection.Handler
     public class
         CreateCollectionDemandCommandHandler : IRequestHandler<CreateCollectionDemandCommand, ErrorOr<IList<Guid>>>
     {
-        private readonly IRepository<ApartmentEntity> _apartmentRepository;
-        private readonly IRepository<FeeCollectionEntity> _feeCollectionRepository;
 
         private readonly IUnitOfWork _unitOfWork;
 
         public CreateCollectionDemandCommandHandler(IUnitOfWork unitOfWork,
-            IRepository<FeeCollectionEntity> feeCollectionRepository, IRepository<ApartmentEntity> apartmentRepository)
+            IRepository<ApartmentEntity> apartmentRepository)
         {
             _unitOfWork = unitOfWork;
-            _feeCollectionRepository = feeCollectionRepository;
-            _apartmentRepository = apartmentRepository;
         }
 
         public async Task<ErrorOr<IList<Guid>>> Handle(CreateCollectionDemandCommand request,
             CancellationToken cancellationToken)
         {
             IEnumerable<ApartmentEntity> apartmentIds =
-                await _apartmentRepository.FindAllForConditionAsync(x =>
+                await _unitOfWork.Repository<ApartmentEntity>().FindAllForConditionAsync(x =>
                     request.ApartmentName.Contains(x.ApartmentNumber));
+
             IEnumerable<ApartmentEntity> apartmentEntities =
                 apartmentIds as ApartmentEntity[] ?? apartmentIds.ToArray();
             if (apartmentEntities.Any())
@@ -46,7 +43,8 @@ namespace SriSai.Application.Collection.Handler
                         ForWhat = request.ForWhat,
                         Comment = request.Comment
                     };
-                    await _feeCollectionRepository.AddAsync(feeCollection);
+                    await _unitOfWork.Repository<FeeCollectionEntity>()
+                        .AddAsync(feeCollection);
                     feeCollectionIds.Add(feeCollection.Id);
                 }
 

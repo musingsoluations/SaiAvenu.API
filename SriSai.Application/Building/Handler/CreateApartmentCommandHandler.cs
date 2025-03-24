@@ -10,14 +10,11 @@ namespace SriSai.Application.Building.Handler
     public class CreateApartmentCommandHandler
         : IRequestHandler<CreateApartmentCommand, ErrorOr<Guid>>
     {
-        private readonly IRepository<ApartmentEntity> _apartmentRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public CreateApartmentCommandHandler(
-            IRepository<ApartmentEntity> apartmentRepository,
             IUnitOfWork unitOfWork)
         {
-            _apartmentRepository = apartmentRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -25,7 +22,7 @@ namespace SriSai.Application.Building.Handler
             CreateApartmentCommand command,
             CancellationToken cancellationToken)
         {
-            ApartmentEntity? existingApartment = await _apartmentRepository
+            ApartmentEntity? existingApartment = await _unitOfWork.Repository<ApartmentEntity>()
                 .FindOneAsync(x => x.ApartmentNumber == command.ApartmentNumber);
             if (existingApartment is not null)
             {
@@ -34,9 +31,11 @@ namespace SriSai.Application.Building.Handler
 
             ApartmentEntity apartmentEntity = new()
             {
-                ApartmentNumber = command.ApartmentNumber, OwnerId = command.OwnerId, RenterId = command.RenterId
+                ApartmentNumber = command.ApartmentNumber,
+                OwnerId = command.OwnerId,
+                RenterId = command.RenterId
             };
-            await _apartmentRepository.AddAsync(apartmentEntity);
+            await _unitOfWork.Repository<ApartmentEntity>().AddAsync(apartmentEntity);
             await _unitOfWork.SaveChangesAsync();
             return apartmentEntity.Id;
         }

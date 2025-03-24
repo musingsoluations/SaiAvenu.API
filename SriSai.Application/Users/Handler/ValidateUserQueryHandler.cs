@@ -12,22 +12,23 @@ namespace SriSai.Application.Users.Handler
         : IRequestHandler<ValidateUserQuery, ErrorOr<UserProfileResponse>>
     {
         private readonly IVerifyPassword _passwordVerifier;
-        private readonly IRepository<UserEntity> _userRepository;
-        private readonly IRepository<UserRoleEntity> _userRoleRepository;
 
-        public ValidateUserQueryHandler(IRepository<UserEntity> userRepository, IVerifyPassword passwordVerifier,
-            IRepository<UserRoleEntity> userRoleRepository)
+        private readonly IUnitOfWork _unitOfWork;
+
+        public ValidateUserQueryHandler(IVerifyPassword passwordVerifier,
+            IUnitOfWork unitOfWork)
         {
-            _userRepository = userRepository;
+            //_userRepository = userRepository;
             _passwordVerifier = passwordVerifier;
-            _userRoleRepository = userRoleRepository;
+            //_userRoleRepository = userRoleRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ErrorOr<UserProfileResponse>> Handle(
             ValidateUserQuery request,
             CancellationToken cancellationToken)
         {
-            UserEntity? user = await _userRepository.FindOneAsync(u => u.Mobile == request.Mobile);
+            UserEntity? user = await _unitOfWork.Repository<UserEntity>().FindOneAsync(u => u.Mobile == request.Mobile);
             if (user is null)
             {
                 return Error.Forbidden(PreDefinedErrorsForUsers.UserNotFound);
@@ -39,7 +40,7 @@ namespace SriSai.Application.Users.Handler
             }
 
             IEnumerable<UserRoleEntity> roles =
-                await _userRoleRepository.FindAllForConditionAsync(z => z.UserEntityId == user.Id);
+                await _unitOfWork.Repository<UserRoleEntity>().FindAllForConditionAsync(z => z.UserEntityId == user.Id);
             user.Roles = roles.ToList();
             return new UserProfileResponse(
                 user.Id,
