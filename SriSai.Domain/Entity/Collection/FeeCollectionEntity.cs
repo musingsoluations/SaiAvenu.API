@@ -9,8 +9,8 @@ namespace SriSai.Domain.Entity.Collection
         public Guid ApartmentId { get; set; }
         public ApartmentEntity Apartment { get; set; }
         public decimal Amount { get; set; }
-        public DateTime RequestForDate { get; set; }
-        public DateTime DueDate { get; set; }
+        public DateOnly RequestForDate { get; set; }
+        public DateOnly DueDate { get; set; }
         public CollectionType ForWhat { get; set; }
         public string? Comment { get; set; }
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
@@ -19,7 +19,7 @@ namespace SriSai.Domain.Entity.Collection
 
     public enum CollectionType
     {
-        MonthlyMaintenance,
-        AdhocExpense
+        MonthlyMaintenance = 1,
+        AdhocExpense = 2
     }
 }

@@ -5,7 +5,7 @@ namespace SriSai.Application.Collection.Command
 {
     public record CreatePaymentCommand(
         decimal Amount,
-        DateTime PaymentDate,
+        DateOnly PaymentDate,
         Guid FeeCollectionId,
         string PaymentMethod) : IRequest<ErrorOr<Guid>>;
 }

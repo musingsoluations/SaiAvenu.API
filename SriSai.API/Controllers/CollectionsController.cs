@@ -44,7 +44,6 @@ namespace SriSai.API.Controllers
                 RequestForDate = dto.RequestForDate,
                 DueDate = dto.DueDate,
                 PaidDate = dto.PaidDate,
-                IsPaid = dto.IsPaid,
                 ForWhat = dto.ForWhat,
                 Comment = dto.Comment
             };
@@ -75,7 +74,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpPost("collection-expense")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetCollectionExpense([FromBody] int year)
         {
             GetCollectionExpenseQuery query = new() { Year = year };

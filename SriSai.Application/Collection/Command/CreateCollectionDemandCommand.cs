@@ -8,10 +8,9 @@ namespace SriSai.Application.Collection.Command
     {
         public required string[] ApartmentName { get; set; }
         public decimal Amount { get; set; }
-        public DateTime RequestForDate { get; set; }
-        public DateTime DueDate { get; set; }
-        public DateTime? PaidDate { get; set; }
-        public bool IsPaid { get; set; }
+        public DateOnly RequestForDate { get; set; }
+        public DateOnly DueDate { get; set; }
+        public DateOnly? PaidDate { get; set; }
         public CollectionType ForWhat { get; set; }
         public string? Comment { get; set; }
     }

@@ -7,8 +7,8 @@ namespace SriSai.Application.Collection.Dtos
         string ApartmentNumber,
         decimal Amount,
         decimal RemainingAmount,
-        DateTime RequestForDate,
-        DateTime DueDate,
+        DateOnly RequestForDate,
+        DateOnly DueDate,
         CollectionType ForWhat,
         string? Comment);
 }

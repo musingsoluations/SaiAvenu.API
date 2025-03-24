@@ -15,13 +15,13 @@ namespace SriSai.API.DTOs.Collection.Validation
             RuleFor(dto => dto.Amount)
                 .GreaterThan(0).WithMessage("Amount must be greater than 0");
 
-            RuleFor(dto => dto.RequestForDate)
-                .GreaterThanOrEqualTo(DateTime.Today)
-                .WithMessage("Request date cannot be in the past");
+            // RuleFor(dto => dto.RequestForDate)
+            //     .GreaterThanOrEqualTo(DateTime.Today)
+            //     .WithMessage("Request date cannot be in the past");
 
-            RuleFor(dto => dto.DueDate)
-                .GreaterThan(dto => dto.RequestForDate)
-                .WithMessage("Due date must be after request date");
+            // RuleFor(dto => dto.DueDate)
+            //     .GreaterThan(dto => dto.RequestForDate)
+            //     .WithMessage("Due date must be after request date");
 
             // RuleFor(dto => dto.PaidDate)
             //     .GreaterThanOrEqualTo(dto => dto.DueDate)
