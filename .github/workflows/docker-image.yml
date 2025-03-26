@@ -33,7 +33,7 @@ jobs:
             --build-arg JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             --build-arg JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
             --build-arg JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" \
-            .
+            SriSai.API/  # Explicit build context
 
   deploy:
     needs: build
