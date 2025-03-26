@@ -38,13 +38,21 @@ COPY ["SriSai.API/appsettings.json", "/src/SriSai.API/appsettings.json"]
 RUN if [ ! -f "appsettings.json" ]; then \
     echo "Error: appsettings.json not found!" && exit 1; \
     fi && \
-    sed -i \
-    -e "s|#{CONNECTION_STRING}#|${CONNECTION_STRING}|g" \
-    -e "s|#{JWT_SECRET}#|${JWT_SECRET}|g" \
-    -e "s|#{JWT_ISSUER}#|${JWT_ISSUER}|g" \
-    -e "s|#{JWT_AUDIENCE}#|${JWT_AUDIENCE}|g" \
-    appsettings.json && \
-    cat appsettings.json | grep -v "Secret\|Connection" # Log config without sensitive data
+    # Install jq for proper JSON handling
+    apt-get update && apt-get install -y jq && \
+    # Create a backup of original appsettings.json
+    cp appsettings.json appsettings.json.bak && \
+    # Use jq to replace placeholders while maintaining JSON structure
+    jq --arg conn "$CONNECTION_STRING" \
+       --arg secret "$JWT_SECRET" \
+       --arg issuer "$JWT_ISSUER" \
+       --arg audience "$JWT_AUDIENCE" \
+       '.Jwt.Secret = $secret | .Jwt.Issuer = $issuer | .Jwt.Audience = $audience | .ConnectionStrings.DefaultConnection = $conn' \
+       appsettings.json.bak > appsettings.json && \
+    # Verify JSON is valid
+    jq empty appsettings.json && \
+    # Log non-sensitive parts of config
+    jq 'del(.Jwt.Secret) | del(.ConnectionStrings)' appsettings.json
 
 # Build the application
 RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
