@@ -1,5 +1,6 @@
 using ErrorOr;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SriSai.API.DTOs.Collection;
 using SriSai.Application.Collection.Command;
@@ -20,6 +21,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpGet("monthly")]
+        [Authorize]
         public async Task<IActionResult> GetExpensesByMonth(
             [FromQuery] int month,
             [FromQuery] int year)
@@ -32,6 +34,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpPost("create")]
+        [Authorize(Roles = "AdminOnly")]
         public async Task<IActionResult> CreateExpense(CreateExpenseDto dto)
         {
             CreateExpenseCommand command = new(

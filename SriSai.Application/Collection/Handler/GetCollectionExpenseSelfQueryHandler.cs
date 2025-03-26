@@ -3,30 +3,37 @@ using MediatR;
 using SriSai.Application.Collection.Dtos;
 using SriSai.Application.Collection.Query;
 using SriSai.Application.interfaces.Reposerty;
+using SriSai.Domain.Entity.Building;
 using SriSai.Domain.Entity.Collection;
 using System.Globalization;
 
 namespace SriSai.Application.Collection.Handler
 {
     public class
-        GetCollectionExpenseQueryHandler : IRequestHandler<GetCollectionExpenseQuery, ErrorOr<List<ChartDataItem>>>
+        GetCollectionExpenseSelfQueryHandler : IRequestHandler<GetCollectionExpenseSelfQuery,
+        ErrorOr<List<ChartDataItem>>>
     {
-        //private readonly IRepository<FeeCollectionEntity> _feeCollectionRepo;
         private readonly IUnitOfWork _unitOfWork;
 
-        public GetCollectionExpenseQueryHandler(IUnitOfWork unitOfWork)
+        public GetCollectionExpenseSelfQueryHandler(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
 
-
-        public async Task<ErrorOr<List<ChartDataItem>>> Handle(GetCollectionExpenseQuery request,
+        public async Task<ErrorOr<List<ChartDataItem>>> Handle(GetCollectionExpenseSelfQuery request,
             CancellationToken cancellationToken)
         {
-            IEnumerable<FeeCollectionEntity> result = await _unitOfWork.Repository<FeeCollectionEntity>().FindAllWithIncludeAsync(
-                x => x.RequestForDate.Year == request.Year,
-                x => x.Payments);
+            ApartmentEntity? apartmentId = await _unitOfWork.Repository<ApartmentEntity>()
+                .FindOneAsync(x => x.OwnerId == request.CurrentUserId);
+            if (apartmentId == null)
+            {
+                return Error.NotFound("No apartment Found for user");
+            }
 
+            IEnumerable<FeeCollectionEntity> result = await _unitOfWork.Repository<FeeCollectionEntity>()
+                .FindAllWithIncludeAsync(
+                    x => x.RequestForDate.Year == request.Year && x.ApartmentId == apartmentId.Id,
+                    x => x.Payments);
             List<ChartDataItem> chartDataItems = new();
             List<string> months = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames
                 .Take(12)

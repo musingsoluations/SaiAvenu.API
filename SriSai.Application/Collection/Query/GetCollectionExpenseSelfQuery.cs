@@ -4,9 +4,9 @@ using SriSai.Application.Collection.Dtos;
 
 namespace SriSai.Application.Collection.Query
 {
-    public class GetCollectionExpenseQuery :
-        IRequest<ErrorOr<List<ChartDataItem>>>
+    public class GetCollectionExpenseSelfQuery : IRequest<ErrorOr<List<ChartDataItem>>>
     {
         public int Year { get; set; }
+        public Guid CurrentUserId { get; set; }
     }
 }

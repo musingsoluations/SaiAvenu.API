@@ -6,6 +6,7 @@ using SriSai.API.DTOs.Collection;
 using SriSai.Application.Collection.Command;
 using SriSai.Application.Collection.Dtos;
 using SriSai.Application.Collection.Query;
+using System.Security.Claims;
 
 namespace SriSai.API.Controllers
 {
@@ -61,8 +62,7 @@ namespace SriSai.API.Controllers
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 })
-
-                );
+            );
         }
 
         [HttpPost("payment")]
@@ -85,15 +85,14 @@ namespace SriSai.API.Controllers
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 })
-
-                );
+            );
         }
 
-        [HttpPost("collection-expense")]
-        //[Authorize]
+        [HttpPost("collection-payment")]
+        [Authorize]
         public async Task<IActionResult> GetCollectionExpense([FromBody] int year)
         {
-            GetCollectionExpenseQuery query = new() { Year = year };
+            GetCollectionPaymentQuery query = new() { Year = year };
 
             ErrorOr<List<ChartDataItem>> result = await _mediator.Send(query);
             return result.Match(
@@ -103,10 +102,28 @@ namespace SriSai.API.Controllers
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 })
-
-
-                );
+            );
             ;
+        }
+
+        [HttpPost("demand-paid-self")]
+        [Authorize]
+        public async Task<IActionResult> GetSelfPaidCollection([FromBody] int year)
+        {
+            string? userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            GetCollectionExpenseSelfQuery query = new()
+            {
+                Year = year, CurrentUserId = Guid.Parse(userId ?? string.Empty)
+            };
+
+            ErrorOr<List<ChartDataItem>> result = await _mediator.Send(query);
+            return result.Match(
+                chartDataItems => Ok(chartDataItems),
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                }));
         }
     }
 }
