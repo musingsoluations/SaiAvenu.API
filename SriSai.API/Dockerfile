@@ -57,43 +57,15 @@ COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
 
 # Configure appsettings.json
 RUN set -e && \
-    # Install jq
     apt-get update && \
-    apt-get install -y jq && \
-    # Debug: Show current directory and files
-    pwd && ls -la && \
-    # Debug: Show original appsettings.json content
-    echo "Original appsettings.json:" && \
+    apt-get install -y --no-install-recommends jq && \
+    printf '{\n  "Jwt": {\n    "Secret": "%s",\n    "Issuer": "%s",\n    "Audience": "%s",\n    "ExpiryHours": 1\n  },\n  "Logging": {\n    "LogLevel": {\n      "Default": "Information",\n      "Microsoft.AspNetCore": "Warning"\n    }\n  },\n  "ConnectionStrings": {\n    "DefaultConnection": "%s"\n  },\n  "AllowedHosts": "*",\n  "DatabaseSettings": {\n    "MaxRetryCount": 3,\n    "EnableDetailedErrors": false,\n    "EnableSensitiveDataLogging": false\n  }\n}' \
+    "$JWT_SECRET" "$JWT_ISSUER" "$JWT_AUDIENCE" "$CONNECTION_STRING" > appsettings.json && \
+    echo "Generated appsettings.json contents:" && \
     cat appsettings.json && \
-    # Create config with jq
-    echo '{ \
-      "Jwt": { \
-        "Secret": "'$JWT_SECRET'", \
-        "Issuer": "'$JWT_ISSUER'", \
-        "Audience": "'$JWT_AUDIENCE'", \
-        "ExpiryHours": 1 \
-      }, \
-      "Logging": { \
-        "LogLevel": { \
-          "Default": "Information", \
-          "Microsoft.AspNetCore": "Warning" \
-        } \
-      }, \
-      "ConnectionStrings": { \
-        "DefaultConnection": "'$CONNECTION_STRING'" \
-      }, \
-      "AllowedHosts": "*", \
-      "DatabaseSettings": { \
-        "MaxRetryCount": 3, \
-        "EnableDetailedErrors": false, \
-        "EnableSensitiveDataLogging": false \
-      } \
-    }' > appsettings.json && \
-    # Verify the JSON is valid
     echo "Verifying JSON validity..." && \
     jq empty appsettings.json && \
-    # Show final config (excluding sensitive data)
     echo "Final configuration (excluding sensitive data):" && \
-    jq 'del(.Jwt.Secret) | del(.ConnectionStrings)' appsettings.json
+    jq 'del(.ConnectionStrings, .Jwt.Secret)' appsettings.json
 
 ENTRYPOINT ["dotnet", "SriSai.API.dll"]
