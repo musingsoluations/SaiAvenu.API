@@ -10,32 +10,40 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-
 ARG CONNECTION_STRING
 ARG JWT_SECRET
 ARG JWT_ISSUER
 ARG JWT_AUDIENCE
 
+# Copy solution and project files
+COPY ["SriSaiAPI.sln", "."]
 COPY ["SriSai.API/SriSai.API.csproj", "SriSai.API/"]
 COPY ["SriSai.Application/SriSai.Application.csproj", "SriSai.Application/"]
 COPY ["SriSai.Domain/SriSai.Domain.csproj", "SriSai.Domain/"]
 COPY ["SriSai.infrastructure/SriSai.infrastructure.csproj", "SriSai.infrastructure/"]
+
+# Restore dependencies
 RUN dotnet restore "SriSai.API/SriSai.API.csproj"
-COPY ../.. .
+
+# Copy the rest of the code
+COPY ["SriSai.API/", "SriSai.API/"]
+COPY ["SriSai.Application/", "SriSai.Application/"]
+COPY ["SriSai.Domain/", "SriSai.Domain/"]
+COPY ["SriSai.infrastructure/", "SriSai.infrastructure/"]
+
 WORKDIR "/src/SriSai.API"
 
-#Safely replace placeholders in appsettings.json (handles @ symbols)
-RUN test -f appsettings.json && \
+# Replace configuration placeholders
+RUN if [ -f appsettings.json ]; then \
     sed -i \
     -e "s|#{CONNECTION_STRING}#|$(printf '%s' "$CONNECTION_STRING" | sed -e 's/[\/&\\|]/\\&/g')|g" \
     -e "s|#{JWT_SECRET}#|$(printf '%s' "$JWT_SECRET" | sed -e 's/[\/&\\|]/\\&/g')|g" \
     -e "s|#{JWT_ISSUER}#|$(printf '%s' "$JWT_ISSUER" | sed -e 's/[\/&\\|]/\\&/g')|g" \
     -e "s|#{JWT_AUDIENCE}#|$(printf '%s' "$JWT_AUDIENCE" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    /src/SriSai.API/appsettings.json || \
-    echo "appsettings.json NOT FOUND - Skipping sed replacements"
+    appsettings.json; \
+    fi
 
-RUN cat appsettings.json
-
+# Build the application
 RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

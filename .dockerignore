@@ -3,7 +3,6 @@
 **/obj/
 .env
 docker-compose*
-Dockerfile*
 .git
 .gitignore
 .vscode/
