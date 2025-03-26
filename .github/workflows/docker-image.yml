@@ -55,7 +55,7 @@ jobs:
           build-args: |
             CONNECTION_STRING=${{ secrets.CONNECTION_STRING  }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_ISSUER=${{ ecrets.JWT_ISSUER }}
+            JWT_ISSUER=${{ secrets.JWT_ISSUER }}
             JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
