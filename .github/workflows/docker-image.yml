@@ -8,7 +8,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ toLowerCase(github.repository_owner) }}/sai-avenue-api
   AZURE_WEBAPP_NAME: MySocietyHub-api
   AZURE_RESOURCE_GROUP: MySocietyHub-test
 
