@@ -1,5 +1,4 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -14,6 +13,11 @@ ARG CONNECTION_STRING
 ARG JWT_SECRET
 ARG JWT_ISSUER
 ARG JWT_AUDIENCE
+
+# Install jq in build stage
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends jq && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy solution and project files
 COPY ["SriSaiAPI.sln", "."]
@@ -38,28 +42,14 @@ RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
-WORKDIR /app
-
-# Pass build arguments to final stage
-ARG CONNECTION_STRING
-ARG JWT_SECRET
-ARG JWT_ISSUER
-ARG JWT_AUDIENCE
-
-# Copy published files except appsettings.json
-COPY --from=publish /app/publish .
-
-# Handle appsettings.json configuration
+# Configure appsettings.json before publishing
 COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
-
-# Configure appsettings.json
-RUN set -e && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends jq && \
-    jq -n --arg secret "$JWT_SECRET" --arg issuer "$JWT_ISSUER" --arg audience "$JWT_AUDIENCE" --arg connStr "$CONNECTION_STRING" '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false}}' > appsettings.json && \
+RUN jq -n --arg secret "$JWT_SECRET" \
+    --arg issuer "$JWT_ISSUER" \
+    --arg audience "$JWT_AUDIENCE" \
+    --arg connStr "$CONNECTION_STRING" \
+    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false}}' > appsettings.json && \
     echo "Generated appsettings.json contents:" && \
     cat appsettings.json && \
     echo "Verifying JSON validity..." && \
@@ -67,4 +57,11 @@ RUN set -e && \
     echo "Final configuration (excluding sensitive data):" && \
     jq 'del(.ConnectionStrings, .Jwt.Secret)' appsettings.json
 
+# Publish the application
+RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+USER $APP_UID
 ENTRYPOINT ["dotnet", "SriSai.API.dll"]
