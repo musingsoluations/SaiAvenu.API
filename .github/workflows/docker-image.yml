@@ -47,6 +47,20 @@ jobs:
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Prepare build arguments
+        id: build_args
+        run: |
+          # Escape special characters in secrets
+          connection_string=$(echo '${{ secrets.CONNECTION_STRING }}' | jq -R -s .)
+          jwt_secret=$(echo '${{ secrets.JWT_SECRET }}' | jq -R -s .)
+          jwt_issuer=$(echo '${{ secrets.JWT_ISSUER }}' | jq -R -s .)
+          jwt_audience=$(echo '${{ secrets.JWT_AUDIENCE }}' | jq -R -s .)
+          
+          echo "connection_string=$connection_string" >> $GITHUB_OUTPUT
+          echo "jwt_secret=$jwt_secret" >> $GITHUB_OUTPUT
+          echo "jwt_issuer=$jwt_issuer" >> $GITHUB_OUTPUT
+          echo "jwt_audience=$jwt_audience" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -56,10 +70,10 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            CONNECTION_STRING=${{ secrets.CONNECTION_STRING }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_ISSUER=${{ secrets.JWT_ISSUER }}
-            JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
+            CONNECTION_STRING=${{ steps.build_args.outputs.connection_string }}
+            JWT_SECRET=${{ steps.build_args.outputs.jwt_secret }}
+            JWT_ISSUER=${{ steps.build_args.outputs.jwt_issuer }}
+            JWT_AUDIENCE=${{ steps.build_args.outputs.jwt_audience }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

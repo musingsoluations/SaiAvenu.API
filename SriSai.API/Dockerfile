@@ -33,14 +33,16 @@ COPY ["SriSai.infrastructure/", "SriSai.infrastructure/"]
 
 WORKDIR "/src/SriSai.API"
 
-# Replace configuration placeholders
-RUN if [ -f appsettings.json ]; then \
-    sed -i \
-    -e "s|#{CONNECTION_STRING}#|$(printf '%s' "$CONNECTION_STRING" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    -e "s|#{JWT_SECRET}#|$(printf '%s' "$JWT_SECRET" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    -e "s|#{JWT_ISSUER}#|$(printf '%s' "$JWT_ISSUER" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    -e "s|#{JWT_AUDIENCE}#|$(printf '%s' "$JWT_AUDIENCE" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    appsettings.json; \
+# Replace configuration placeholders using jq
+RUN apt-get update && apt-get install -y jq && \
+    if [ -f appsettings.json ]; then \
+    jq --arg conn "$CONNECTION_STRING" \
+       --arg secret "$JWT_SECRET" \
+       --arg issuer "$JWT_ISSUER" \
+       --arg audience "$JWT_AUDIENCE" \
+       '.Jwt.Secret = $secret | .Jwt.Issuer = $issuer | .Jwt.Audience = $audience | .ConnectionStrings.DefaultConnection = $conn' \
+       appsettings.json > appsettings.json.tmp && \
+    mv appsettings.json.tmp appsettings.json; \
     fi
 
 # Build the application
