@@ -33,14 +33,18 @@ COPY ["SriSai.infrastructure/", "SriSai.infrastructure/"]
 
 WORKDIR "/src/SriSai.API"
 
-RUN test -f appsettings.json && \
+# Ensure appsettings.json exists and update configuration
+COPY ["SriSai.API/appsettings.json", "/src/SriSai.API/appsettings.json"]
+RUN if [ ! -f "appsettings.json" ]; then \
+    echo "Error: appsettings.json not found!" && exit 1; \
+    fi && \
     sed -i \
-    -e "s|#{CONNECTION_STRING}#|$(printf '%s' "$CONNECTION_STRING" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    -e "s|#{JWT_SECRET}#|$(printf '%s' "$JWT_SECRET" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    -e "s|#{JWT_ISSUER}#|$(printf '%s' "$JWT_ISSUER" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    -e "s|#{JWT_AUDIENCE}#|$(printf '%s' "$JWT_AUDIENCE" | sed -e 's/[\/&\\|]/\\&/g')|g" \
-    /src/SriSai.API/appsettings.json || \
-    echo "appsettings.json NOT FOUND - Skipping sed replacements"
+    -e "s|#{CONNECTION_STRING}#|${CONNECTION_STRING}|g" \
+    -e "s|#{JWT_SECRET}#|${JWT_SECRET}|g" \
+    -e "s|#{JWT_ISSUER}#|${JWT_ISSUER}|g" \
+    -e "s|#{JWT_AUDIENCE}#|${JWT_AUDIENCE}|g" \
+    appsettings.json && \
+    cat appsettings.json | grep -v "Secret\|Connection" # Log config without sensitive data
 
 # Build the application
 RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
@@ -51,5 +55,10 @@ RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /
 
 FROM base AS final
 WORKDIR /app
+# Ensure all files including appsettings.json are copied from publish
 COPY --from=publish /app/publish .
+# Verify appsettings.json exists in final image
+RUN if [ ! -f "appsettings.json" ]; then \
+    echo "Error: appsettings.json not found in final image!" && exit 1; \
+    fi
 ENTRYPOINT ["dotnet", "SriSai.API.dll"]
