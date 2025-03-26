@@ -54,24 +54,45 @@ COPY --from=publish /app/publish .
 
 # Handle appsettings.json configuration
 COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
-RUN if [ ! -f "appsettings.json" ]; then \
-    echo "Error: appsettings.json not found!" && exit 1; \
-    fi
 
-# Install jq and configure appsettings.json
-RUN apt-get update && apt-get install -y jq && \
-    # Create a backup of original appsettings.json
-    cp appsettings.json appsettings.json.bak && \
-    # Use jq to replace placeholders while maintaining JSON structure
-    jq --arg conn "$CONNECTION_STRING" \
-       --arg secret "$JWT_SECRET" \
-       --arg issuer "$JWT_ISSUER" \
-       --arg audience "$JWT_AUDIENCE" \
-       '.Jwt.Secret = $secret | .Jwt.Issuer = $issuer | .Jwt.Audience = $audience | .ConnectionStrings.DefaultConnection = $conn' \
-       appsettings.json.bak > temp.json && \
-    mv temp.json appsettings.json && \
-    # Verify JSON is valid and show non-sensitive parts
+# Configure appsettings.json
+RUN set -e && \
+    # Install jq
+    apt-get update && \
+    apt-get install -y jq && \
+    # Debug: Show current directory and files
+    pwd && ls -la && \
+    # Debug: Show original appsettings.json content
+    echo "Original appsettings.json:" && \
+    cat appsettings.json && \
+    # Create config with jq
+    echo '{ \
+      "Jwt": { \
+        "Secret": "'$JWT_SECRET'", \
+        "Issuer": "'$JWT_ISSUER'", \
+        "Audience": "'$JWT_AUDIENCE'", \
+        "ExpiryHours": 1 \
+      }, \
+      "Logging": { \
+        "LogLevel": { \
+          "Default": "Information", \
+          "Microsoft.AspNetCore": "Warning" \
+        } \
+      }, \
+      "ConnectionStrings": { \
+        "DefaultConnection": "'$CONNECTION_STRING'" \
+      }, \
+      "AllowedHosts": "*", \
+      "DatabaseSettings": { \
+        "MaxRetryCount": 3, \
+        "EnableDetailedErrors": false, \
+        "EnableSensitiveDataLogging": false \
+      } \
+    }' > appsettings.json && \
+    # Verify the JSON is valid
+    echo "Verifying JSON validity..." && \
     jq empty appsettings.json && \
+    # Show final config (excluding sensitive data)
     echo "Final configuration (excluding sensitive data):" && \
     jq 'del(.Jwt.Secret) | del(.ConnectionStrings)' appsettings.json
 
