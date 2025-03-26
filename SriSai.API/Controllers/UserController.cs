@@ -134,6 +134,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginUserDto loginUserDto)
         {
             ValidateUserQuery query = new(loginUserDto.MobileNumber, loginUserDto.Password);
@@ -155,4 +156,3 @@ namespace SriSai.API.Controllers
         }
     }
 }
-// trigger new deployment 
