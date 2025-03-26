@@ -59,8 +59,7 @@ COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
 RUN set -e && \
     apt-get update && \
     apt-get install -y --no-install-recommends jq && \
-    printf '{\n  "Jwt": {\n    "Secret": "%s",\n    "Issuer": "%s",\n    "Audience": "%s",\n    "ExpiryHours": 1\n  },\n  "Logging": {\n    "LogLevel": {\n      "Default": "Information",\n      "Microsoft.AspNetCore": "Warning"\n    }\n  },\n  "ConnectionStrings": {\n    "DefaultConnection": "%s"\n  },\n  "AllowedHosts": "*",\n  "DatabaseSettings": {\n    "MaxRetryCount": 3,\n    "EnableDetailedErrors": false,\n    "EnableSensitiveDataLogging": false\n  }\n}' \
-    "$JWT_SECRET" "$JWT_ISSUER" "$JWT_AUDIENCE" "$CONNECTION_STRING" > appsettings.json && \
+    jq -n --arg secret "$JWT_SECRET" --arg issuer "$JWT_ISSUER" --arg audience "$JWT_AUDIENCE" --arg connStr "$CONNECTION_STRING" '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false}}' > appsettings.json && \
     echo "Generated appsettings.json contents:" && \
     cat appsettings.json && \
     echo "Verifying JSON validity..." && \
