@@ -110,21 +110,7 @@ jobs:
 
       - name: Wait for deployment
         run: |
-          sleep 30
-
-      - name: Verify deployment and container status
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            echo "Checking container logs..."
-            az webapp log tail \
-              --name ${{ env.AZURE_WEBAPP_NAME }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
-
-            echo "Checking container configuration..."
-            az webapp config container show \
-              --name ${{ env.AZURE_WEBAPP_NAME }} \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+          sleep 60
 
       - name: Restart web app
         uses: azure/CLI@v1
