@@ -125,5 +125,23 @@ namespace SriSai.API.Controllers
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 }));
         }
+
+        [HttpGet("user-payments")]
+        [Authorize]
+        [ProducesResponseType(typeof(List<UserPaymentDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUserPayments()
+        {
+            string? userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            ErrorOr<List<UserPaymentDto>> result = await _mediator.Send(
+                new GetUserPaymentsQuery(Guid.Parse(userId ?? string.Empty)));
+            
+            return result.Match(
+                payments => Ok(payments),
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                }));
+        }
     }
 }
