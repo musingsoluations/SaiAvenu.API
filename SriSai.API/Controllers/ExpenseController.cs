@@ -34,7 +34,7 @@ namespace SriSai.API.Controllers
         }
 
         [HttpPost("create")]
-        [Authorize(Roles = "AdminOnly")]
+        [Authorize("AdminOnly")]
         public async Task<IActionResult> CreateExpense(CreateExpenseDto dto)
         {
             CreateExpenseCommand command = new(
