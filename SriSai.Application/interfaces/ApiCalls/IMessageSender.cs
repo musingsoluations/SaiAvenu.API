@@ -1,4 +1,5 @@
 using ErrorOr;
+using SriSai.Application.Configuration;
 
 namespace SriSai.Application.interfaces.ApiCalls
 {
@@ -12,6 +13,6 @@ namespace SriSai.Application.interfaces.ApiCalls
         /// </summary>
         /// <param name="url">The URL to send the request to</param>
         /// <returns>ErrorOr of success or failure</returns>
-        Task<ErrorOr<bool>> SendMessage(string url);
+        Task<ErrorOr<bool>> SendMessage(WhatsAppMessageData url);
     }
 }

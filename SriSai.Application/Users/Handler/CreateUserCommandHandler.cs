@@ -1,7 +1,9 @@
 using ErrorOr;
 using MediatR;
+using SriSai.Application.Configuration;
 using SriSai.Application.Interfaces.Encryption;
 using SriSai.Application.interfaces.Reposerty;
+using SriSai.Application.Messaging.Command;
 using SriSai.Application.Users.Command;
 using SriSai.Domain.Entity.Users;
 using SriSai.Domain.Errors;
@@ -12,11 +14,13 @@ namespace SriSai.Application.Users.Handler
     public class CreateUserCommandHandler(
         IUnitOfWork unitOfWork,
         IDateTimeProvider dateTimeProvider,
-        IHashPassword hashPassword)
+        IHashPassword hashPassword,
+        IMediator mediator)
         : IRequestHandler<CreateUserCommand, ErrorOr<Guid>>
     {
         private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
         private readonly IHashPassword _hashPassword = hashPassword;
+        private readonly IMediator _mediator = mediator;
 
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
@@ -38,6 +42,17 @@ namespace SriSai.Application.Users.Handler
                     request.Roles, request.CreatedById);
                 UserEntity result = await _unitOfWork.Repository<UserEntity>().AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
+                SendMessageCommand createUserMessage = new()
+                {
+                    MobileNumber = request.Mobile,
+                    MessageBody =
+                    [
+                        request.FirstName + ' ' + request.LastName, request.Mobile,
+                        request.Password
+                    ],
+                    TemplateName = WhatsAppTemplateNames.UserCreatedTemplate
+                };
+                ErrorOr<Unit> sendMessageResult = await _mediator.Send(createUserMessage, cancellationToken);
                 return user.Id;
             }
             catch (Exception e)

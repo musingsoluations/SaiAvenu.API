@@ -1,7 +1,8 @@
 namespace SriSai.Application.Configuration
 {
-    public class WhatsAppTemplateNames
+    public static class WhatsAppTemplateNames
     {
-        
+        public const string UserCreatedTemplate = "hrms_new_reg";
+        public const string DemandCreated = "SRISAI_1";
     }
 }
