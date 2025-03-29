@@ -128,6 +128,7 @@ namespace SriSai.API.Controllers
                 user => Ok(result.Value),
                 errors => new ObjectResult(new ProblemDetails
                 {
+                    Status = 400,
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 }));

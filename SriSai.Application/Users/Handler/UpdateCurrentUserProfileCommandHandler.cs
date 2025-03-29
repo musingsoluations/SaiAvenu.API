@@ -37,7 +37,7 @@ namespace SriSai.Application.Users.Handler
             if (request.Password is not null && request.Password != string.Empty)
             {
                 string hashedPassword = _hashPassword.HashPassword(request.Password);
-                if (currentData.Password != hashedPassword)
+                if (currentData.Password == hashedPassword)
                 {
                     return Error.Validation(PreDefinedErrorsForUsers.InvalidPassword);
                 }
@@ -58,7 +58,6 @@ namespace SriSai.Application.Users.Handler
             currentData.UpdateEmail(request.Email);
             currentData.UpdateMobile(request.Mobile);
             currentData.UpdateEntityInternals(request.Id);
-            currentData.UpdatePassword(request.Password!);
             await _unitOfWork.Repository<UserEntity>().UpdateAsync(currentData);
             await _unitOfWork.SaveChangesAsync();
 
