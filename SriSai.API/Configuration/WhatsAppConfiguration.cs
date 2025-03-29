@@ -1,4 +1,4 @@
-namespace SriSai.API.Configrations
+namespace SriSai.API.Configuration
 {
     public class WhatsAppConfiguration
     {

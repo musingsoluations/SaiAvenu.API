@@ -1,9 +1,10 @@
+using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using SriSai.API.Configrations;
+using SriSai.API.Configuration;
 using SriSai.API.DTOs.Users.Validation;
 using SriSai.API.OpenApiHelper;
 using SriSai.API.Services.Auth;
@@ -11,9 +12,8 @@ using SriSai.Application.DependencyInjection;
 using SriSai.Domain.DependencyInjection;
 using SriSai.infrastructure.DependencyInjection;
 using SriSai.infrastructure.Persistent.DbContext;
-using System.Text;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 // Configure configuration sources with proper precedence
 builder.Configuration
@@ -77,26 +77,26 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddOpenApi(options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
 
 // Add layer configurations
-string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// read WhatsApp configuration
-builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSection("WhatsApp"));
-
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDomain();
 builder.Services.AddApplication();
-if (connectionString != null)
-{
-    builder.Services.AddInfrastructure(connectionString);
-}
+if (connectionString != null) builder.Services.AddInfrastructure(connectionString);
 
 // Register JWT token service
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-WebApplication app = builder.Build();
+
+// Configure WhatsApp settings using options pattern
+ builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSection("WhatsApp"));
+
+// Register WhatsApp service
+// builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
+
+var app = builder.Build();
 
 // Initialize database migrations
-using IServiceScope scope = app.Services.CreateScope();
-DatabaseMigrationService migrationService = scope.ServiceProvider.GetRequiredService<DatabaseMigrationService>();
+using var scope = app.Services.CreateScope();
+var migrationService = scope.ServiceProvider.GetRequiredService<DatabaseMigrationService>();
 await migrationService.StartAsync(CancellationToken.None);
 
 // Configure the HTTP request pipeline.
