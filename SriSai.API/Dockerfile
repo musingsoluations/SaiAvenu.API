@@ -13,6 +13,9 @@ ARG CONNECTION_STRING
 ARG JWT_SECRET
 ARG JWT_ISSUER
 ARG JWT_AUDIENCE
+ARG WHATAAPP_BASEURL
+ARG WHATSAPP_APIKEY
+ARG WHATSAPP_SENDERID
 
 # Install jq in build stage
 RUN apt-get update && \
@@ -42,6 +45,18 @@ RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
+ARG CONNECTION_STRING
+ARG JWT_SECRET
+ARG JWT_ISSUER
+ARG JWT_AUDIENCE
+ARG WHATAAPP_BASEURL
+ARG WHATSAPP_APIKEY
+ARG WHATSAPP_SENDERID
+
+# Install jq in publish stage
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends jq && \
+    rm -rf /var/lib/apt/lists/*
 
 # Configure appsettings.json before publishing
 COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
