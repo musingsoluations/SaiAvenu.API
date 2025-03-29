@@ -45,16 +45,15 @@ ARG BUILD_CONFIGURATION=Release
 
 # Configure appsettings.json before publishing
 COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
-RUN jq -n --arg secret "$JWT_SECRET" \
+RUN jq -n \
+    --arg secret "$JWT_SECRET" \
     --arg issuer "$JWT_ISSUER" \
     --arg audience "$JWT_AUDIENCE" \
     --arg connStr "$CONNECTION_STRING" \
     --arg baseUrl "$WHATAAPP_BASEURL" \
-    --agr apiKey "$WHATSAPP_APIKEY" \
-    --arg SenderId "$WHATSAPP_SENDERID" \
-    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false},"WhatsApp":{"BaseUrl":$baseUrl,"SenderId":$SenderId,"ApiKey":$apiKey}}' > appsettings.json && \
-    echo "Generated appsettings.json contents:" && \
-    cat appsettings.json && \
+    --arg apiKey "$WHATSAPP_APIKEY" \
+    --arg senderId "$WHATSAPP_SENDERID" \
+    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false},"WhatsApp":{"BaseUrl":$baseUrl,"SenderId":$senderId,"ApiKey":$apiKey}}' > appsettings.json && \
     echo "Verifying JSON validity..." && \
     jq empty appsettings.json && \
     echo "Final configuration (excluding sensitive data):" && \
