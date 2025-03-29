@@ -52,7 +52,7 @@ RUN jq -n --arg secret "$JWT_SECRET" \
     --arg baseUrl "$WHATAAPP_BASEURL" \
     --agr apiKey "$WHATSAPP_APIKEY" \
     --arg SenderId "$WHATSAPP_SENDERID" \
-    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false} "WhatsApp":{"BaseUrl":$baseUrl,"SenderId":$SenderId,"ApiKey":$apiKey}}' > appsettings.json && \
+    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false},"WhatsApp":{"BaseUrl":$baseUrl,"SenderId":$SenderId,"ApiKey":$apiKey}}' > appsettings.json && \
     echo "Generated appsettings.json contents:" && \
     cat appsettings.json && \
     echo "Verifying JSON validity..." && \
