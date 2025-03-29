@@ -58,6 +58,7 @@ namespace SriSai.Application.Users.Handler
             currentData.UpdateEmail(request.Email);
             currentData.UpdateMobile(request.Mobile);
             currentData.UpdateEntityInternals(request.Id);
+            currentData.UpdatePassword(request.Password!);
             await _unitOfWork.Repository<UserEntity>().UpdateAsync(currentData);
             await _unitOfWork.SaveChangesAsync();
 
