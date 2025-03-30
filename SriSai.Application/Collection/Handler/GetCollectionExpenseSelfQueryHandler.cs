@@ -23,16 +23,17 @@ namespace SriSai.Application.Collection.Handler
         public async Task<ErrorOr<List<ChartDataItem>>> Handle(GetCollectionExpenseSelfQuery request,
             CancellationToken cancellationToken)
         {
-            ApartmentEntity? apartmentId = await _unitOfWork.Repository<ApartmentEntity>()
-                .FindOneAsync(x => x.OwnerId == request.CurrentUserId);
-            if (apartmentId == null)
+            IEnumerable<ApartmentEntity>? apartmentId = (await _unitOfWork.Repository<ApartmentEntity>()
+                .FindAllForConditionAsync
+                    (x => x.OwnerId == request.CurrentUserId)).ToList();
+            if (!apartmentId.Any())
             {
                 return Error.NotFound("No apartment Found for user");
             }
 
             IEnumerable<FeeCollectionEntity> result = await _unitOfWork.Repository<FeeCollectionEntity>()
                 .FindAllWithIncludeAsync(
-                    x => x.RequestForDate.Year == request.Year && x.ApartmentId == apartmentId.Id,
+                    x => x.RequestForDate.Year == request.Year && apartmentId.Contains(x.Apartment),
                     x => x.Payments);
             List<ChartDataItem> chartDataItems = new();
             List<string> months = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames
