@@ -21,19 +21,21 @@ namespace SriSai.Application.Collection.Handler
             GetUnpaidFeesQuery request,
             CancellationToken cancellationToken)
         {
-            IEnumerable<FeeCollectionEntity> fees = await _unitOfWork.Repository<FeeCollectionEntity>().FindAllWithIncludeAsync(
-                f => f.Amount > f.Payments.Sum(p => p.Amount), q => q.Apartment, q => q.Payments);
+            IEnumerable<FeeCollectionEntity> fees = await _unitOfWork.Repository<FeeCollectionEntity>()
+                .FindAllWithIncludeAsync(
+                    f => f.Amount > f.Payments.Sum(p => p.Amount), q => q.Apartment, q => q.Payments);
 
             return fees.Select(f => new UnpaidFeeResultDto(
-                f.Id.ToString(),
-                f.Apartment.ApartmentNumber,
-                f.Amount,
-                f.RemainingAmount,
-                f.RequestForDate,
-                f.DueDate,
-                f.ForWhat,
-                f.Comment
-            )).ToList();
+                    f.Id.ToString(),
+                    f.Apartment.ApartmentNumber,
+                    f.Amount,
+                    f.RemainingAmount,
+                    f.RequestForDate,
+                    f.DueDate,
+                    f.ForWhat,
+                    f.Comment
+                )).OrderBy(f => f.ApartmentNumber)
+                .ToList();
         }
     }
 }
