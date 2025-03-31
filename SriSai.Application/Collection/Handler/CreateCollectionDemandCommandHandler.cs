@@ -12,7 +12,6 @@ namespace SriSai.Application.Collection.Handler
         CreateCollectionDemandCommandHandler : IRequestHandler<CreateCollectionDemandCommand, ErrorOr<IList<Guid>>>
     {
         private readonly IDateTimeProvider _dateTimeProvider;
-
         private readonly IUnitOfWork _unitOfWork;
 
         public CreateCollectionDemandCommandHandler(IUnitOfWork unitOfWork,
@@ -46,7 +45,8 @@ namespace SriSai.Application.Collection.Handler
                         ForWhat = request.ForWhat,
                         Comment = request.Comment,
                         CreatedBy = request.CreatedBy,
-                        CreatedDateTime = _dateTimeProvider.GetUtcNow()
+                        CreatedDateTime = _dateTimeProvider.GetUtcNow(),
+                        IsDeleted = false
                     };
                     await _unitOfWork.Repository<FeeCollectionEntity>()
                         .AddAsync(feeCollection);

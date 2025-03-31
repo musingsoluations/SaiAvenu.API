@@ -38,7 +38,8 @@ namespace SriSai.Application.Building.Handler
                 OwnerId = command.OwnerId,
                 RenterId = command.RenterId,
                 CreatedBy = command.CreatedById,
-                CreatedDateTime = _dateTimeProvider.GetUtcNow()
+                CreatedDateTime = _dateTimeProvider.GetUtcNow(),
+                IsDeleted = false
             };
             await _unitOfWork.Repository<ApartmentEntity>().AddAsync(apartmentEntity);
             await _unitOfWork.SaveChangesAsync();

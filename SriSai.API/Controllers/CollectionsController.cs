@@ -76,11 +76,13 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
         {
             _logger.LogInformation("Creating payment");
+            string? userGuid = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             CreatePaymentCommand command = new(
                 dto.Amount,
                 dto.PaymentDate,
                 dto.FeeCollectionId,
-                dto.PaymentMethod);
+                dto.PaymentMethod,
+                Guid.Parse(userGuid ?? string.Empty));
 
             ErrorOr<Guid> result = await _mediator.Send(command);
 

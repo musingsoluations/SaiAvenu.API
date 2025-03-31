@@ -7,5 +7,6 @@ namespace SriSai.Application.Collection.Command
         decimal Amount,
         DateOnly PaymentDate,
         Guid FeeCollectionId,
-        string PaymentMethod) : IRequest<ErrorOr<Guid>>;
+        string PaymentMethod,
+        Guid CreatedBy) : IRequest<ErrorOr<Guid>>;
 }
