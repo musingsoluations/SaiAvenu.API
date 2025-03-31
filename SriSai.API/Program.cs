@@ -1,8 +1,11 @@
-using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Middleware.APM;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Scalar.AspNetCore;
 using SriSai.API.DTOs.Users.Validation;
 using SriSai.API.OpenApiHelper;
@@ -12,15 +15,57 @@ using SriSai.Application.DependencyInjection;
 using SriSai.Domain.DependencyInjection;
 using SriSai.infrastructure.DependencyInjection;
 using SriSai.infrastructure.Persistent.DbContext;
+using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Configure configuration sources with proper precedence
 builder.Configuration
     .AddJsonFile("appsettings.json", false, true)
-    .AddJsonFile("appsettings.Development.json", true, true);
+    .AddJsonFile("appsettings.Development.json", true, true)
+    .AddEnvironmentVariables();
+builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+// Configure OpenTelemetry for Logging and Tracing
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing.SetResourceBuilder(ResourceBuilder.CreateDefault()
+            .AddService(builder.Configuration["MW:ServiceName"] ?? "DefaultService"));
+
+        tracing.AddAspNetCoreInstrumentation(); // Auto-trace ASP.NET Core requests
+        tracing.AddHttpClientInstrumentation(); // Trace outgoing HTTP calls
+
+        tracing.AddOtlpExporter(o =>
+        {
+            o.Endpoint = new Uri(builder.Configuration["MW:TargetURL"] ?? "");
+            o.Headers = $"x-api-key={builder.Configuration["MW:ApiKey"]}";
+        });
+    });
+
+//builder.Logging.ClearProviders();
+builder.Logging.AddOpenTelemetry(logging =>
+{
+    logging.IncludeFormattedMessage = true;
+    logging.IncludeScopes = true;
+
+    logging.SetResourceBuilder(ResourceBuilder.CreateDefault()
+        .AddService(builder.Configuration["MW:ServiceName"] ?? "DefaultService"));
+
+    logging.AddOtlpExporter(o =>
+    {
+        o.Endpoint = new Uri(builder.Configuration["MW:TargetURL"] ?? "");
+        o.Headers = $"x-api-key={builder.Configuration["MW:ApiKey"]}";
+    });
+});
+
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserDtoValidator>(ServiceLifetime.Transient);
+
+
+builder.Services.ConfigureMWInstrumentation(builder.Configuration);
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -77,26 +122,31 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddOpenApi(options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
 
 // Add layer configurations
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDomain();
 builder.Services.AddApplication();
-if (connectionString != null) builder.Services.AddInfrastructure(connectionString);
+if (connectionString != null)
+{
+    builder.Services.AddInfrastructure(connectionString);
+}
 
 // Register JWT token service
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 
 // Configure WhatsApp settings using options pattern
- builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSection("WhatsApp"));
+builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSection("WhatsApp"));
 
 // Register WhatsApp service
 // builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
+
+Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
 
 // Initialize database migrations
-using var scope = app.Services.CreateScope();
-var migrationService = scope.ServiceProvider.GetRequiredService<DatabaseMigrationService>();
+using IServiceScope scope = app.Services.CreateScope();
+DatabaseMigrationService migrationService = scope.ServiceProvider.GetRequiredService<DatabaseMigrationService>();
 await migrationService.StartAsync(CancellationToken.None);
 
 // Configure the HTTP request pipeline.

@@ -14,11 +14,13 @@ namespace SriSai.API.Controllers
     [Route("api/[controller]")]
     public class CollectionsController : ControllerBase
     {
+        private readonly ILogger<CollectionsController> _logger;
         private readonly IMediator _mediator;
 
-        public CollectionsController(IMediator mediator)
+        public CollectionsController(IMediator mediator, ILogger<CollectionsController> logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         [HttpGet("unpaid")]
@@ -27,6 +29,7 @@ namespace SriSai.API.Controllers
         [ProducesResponseType(typeof(List<UnpaidFeeDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetUnpaidFees()
         {
+            _logger.LogInformation("Getting unpaid fees");
             ErrorOr<List<UnpaidFeeResultDto>> result = await _mediator.Send(new GetUnpaidFeesQuery());
             return result.Match(
                 fees => Ok(fees),
@@ -42,6 +45,7 @@ namespace SriSai.API.Controllers
         [Authorize("AdminOnly")]
         public async Task<IActionResult> CreateCollectionDemand(CreateCollectionDemandDto dto)
         {
+            _logger.LogInformation("Creating collection demand");
             CreateCollectionDemandCommand command = new()
             {
                 ApartmentName = dto.ApartmentName,
@@ -52,7 +56,6 @@ namespace SriSai.API.Controllers
                 ForWhat = dto.ForWhat,
                 Comment = dto.Comment
             };
-
             ErrorOr<IList<Guid>> result = await _mediator.Send(command);
 
             return result.Match(
@@ -70,6 +73,7 @@ namespace SriSai.API.Controllers
         [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
         {
+            _logger.LogInformation("Creating payment");
             CreatePaymentCommand command = new(
                 dto.Amount,
                 dto.PaymentDate,
@@ -92,6 +96,7 @@ namespace SriSai.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetCollectionExpense([FromBody] int year)
         {
+            _logger.LogInformation("Getting collection expense");
             GetCollectionPaymentQuery query = new() { Year = year };
 
             ErrorOr<List<ChartDataItem>> result = await _mediator.Send(query);
@@ -111,6 +116,7 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> GetSelfPaidCollection([FromBody] int year)
         {
             string? userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            _logger.LogInformation($"Getting self-paid collection for {userId}");
             GetCollectionExpenseSelfQuery query = new()
             {
                 Year = year, CurrentUserId = Guid.Parse(userId ?? string.Empty)
@@ -132,9 +138,10 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> GetUserPayments()
         {
             string? userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            _logger.LogInformation($"Getting user payments for {userId}");
             ErrorOr<List<UserPaymentDto>> result = await _mediator.Send(
                 new GetUserPaymentsQuery(Guid.Parse(userId ?? string.Empty)));
-            
+
             return result.Match(
                 payments => Ok(payments),
                 errors => new ObjectResult(new ProblemDetails

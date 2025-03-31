@@ -18,6 +18,7 @@ namespace SriSai.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly ILogger<UserController> _logger;
         private readonly IMediator _mediator;
         private readonly IValidator<UserProfileDto> _userProfileValidator;
         private readonly IValidator<CreateUserDto> _validator;
@@ -25,18 +26,23 @@ namespace SriSai.API.Controllers
         public UserController(
             IMediator mediator,
             IValidator<CreateUserDto> validator,
-            IJwtTokenService jwtTokenService, IValidator<UserProfileDto> userProfileValidator)
+            IJwtTokenService jwtTokenService, IValidator<UserProfileDto> userProfileValidator,
+            ILogger<UserController> logger)
         {
             _mediator = mediator;
             _validator = validator;
             _jwtTokenService = jwtTokenService;
             _userProfileValidator = userProfileValidator;
+            _logger = logger;
         }
 
         [HttpPost("register")]
         [Authorize("AdminOnly")]
         public async Task<IActionResult> AddUser(CreateUserDto createUserDto)
         {
+            _logger.LogInformation("Starting user registration process for: {FirstName} {LastName}",
+                createUserDto.FirstName, createUserDto.LastName);
+
             ValidationResult? validationResult = await _validator.ValidateAsync(createUserDto);
             if (validationResult.IsValid == false)
             {
@@ -82,6 +88,7 @@ namespace SriSai.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetUserProfile()
         {
+            _logger.LogInformation("Getting user profile");
             string? userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             UserProfileQuery query = new(Guid.Parse(userId ?? string.Empty));
             ErrorOr<UserProfile> result = await _mediator.Send(query);
@@ -95,6 +102,8 @@ namespace SriSai.API.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateUserProfile(UserProfileDto userProfile)
         {
+            _logger.LogInformation("Updating user profile for user: {UserId}", User.Identity?.Name);
+
             string? userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -140,6 +149,7 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> Login(LoginUserDto loginUserDto)
         {
             ValidateUserQuery query = new(loginUserDto.MobileNumber, loginUserDto.Password);
+            _logger.LogInformation("Starting login process for user: {MobileNumber}", loginUserDto.MobileNumber);
             ErrorOr<UserProfileResponse> result = await _mediator.Send(query);
             return result.Match(
                 user => Ok(new UserInformationDto
