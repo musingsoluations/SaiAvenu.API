@@ -152,11 +152,11 @@ namespace SriSai.API.Controllers
         }
 
         [HttpGet("totals")]
-        [Authorize]
+        //[Authorize]
         public async Task<ActionResult<TotalAmountsDto>> GetTotalAmounts(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Getting total amounts for payments, expenses and carry forward payments");
-            var result = await _mediator.Send(new GetTotalAmountsCommand(), cancellationToken);
+            ErrorOr<TotalAmountsDto> result = await _mediator.Send(new GetTotalAmountsCommand(), cancellationToken);
             return result.Match(
                 totals => Ok(totals),
                 errors => Problem(string.Join(", ", errors.Select(e => e.Code))));
