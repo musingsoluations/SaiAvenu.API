@@ -53,6 +53,10 @@ ARG WHATAAPP_BASEURL
 ARG WHATSAPP_APIKEY
 ARG WHATSAPP_SENDERID
 
+ARG MW_SERVER_URL
+ARG MW_APIKEY
+ARG MV_APP_NAME
+
 # Install jq in publish stage
 RUN apt-get update && \
     apt-get install -y --no-install-recommends jq && \
@@ -68,7 +72,10 @@ RUN jq -n \
     --arg baseUrl "$WHATAAPP_BASEURL" \
     --arg apiKey "$WHATSAPP_APIKEY" \
     --arg senderId "$WHATSAPP_SENDERID" \
-    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false},"WhatsApp":{"BaseUrl":$baseUrl,"SenderId":$senderId,"ApiKey":$apiKey}}' > appsettings.json && \
+    --arg mwServerUrl "$MW_SERVER_URL" \
+    --arg mwApiKey "$MW_APIKEY" \
+    --arg mwAppName "$MV_APP_NAME" \
+    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false},"MW":{"ServiceName":"$mwAppName","TargetURL":"$mwServerUrl","ApiKey":"$mwApiKey"},"WhatsApp":{"BaseUrl":$baseUrl,"SenderId":$senderId,"ApiKey":$apiKey}}' > appsettings.json && \
     echo "Verifying JSON validity..." && \
     jq empty appsettings.json && \
     echo "Final configuration (excluding sensitive data):" && \

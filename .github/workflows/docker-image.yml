@@ -71,6 +71,9 @@ jobs:
             WHATAAPP_BASEURL=${{ secrets.WHATAAPP_BASEURL }}
             WHATSAPP_APIKEY=${{ secrets.WHATSAPP_APIKEY }}
             WHATSAPP_SENDERID=${{ secrets.WHATSAPP_SENDERID }}
+            MW_SERVER_URL=${{ secrets.MW_SERVER_URL }}
+            MW_APIKEY=${{ secrets.MW_APIKEY }}
+            MV_APP_NAME=${{ secrets.MV_APP_NAME }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
