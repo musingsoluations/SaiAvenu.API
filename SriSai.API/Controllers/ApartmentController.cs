@@ -8,6 +8,7 @@ using SriSai.API.DTOs.Building;
 using SriSai.Application.Building.Command;
 using SriSai.Application.Building.Query;
 using SriSai.Application.Users.Query;
+using System.Security.Claims;
 
 namespace SriSai.API.Controllers
 {
@@ -33,6 +34,7 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> CreateApartment(CreateApartmentDto dto)
         {
             ValidationResult? validationResult = await _validator.ValidateAsync(dto);
+            string? userGuid = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             _logger.LogInformation("Adding new apartment with number {ApartmentNumber}", dto.ApartmentNumber);
             if (!validationResult.IsValid)
             {
@@ -42,7 +44,8 @@ namespace SriSai.API.Controllers
             CreateApartmentCommand command = new(
                 dto.ApartmentNumber,
                 dto.OwnerId,
-                dto.RenterId
+                dto.RenterId,
+                Guid.Parse(userGuid ?? string.Empty)
             );
 
             ErrorOr<Guid> result = await _mediator.Send(command);

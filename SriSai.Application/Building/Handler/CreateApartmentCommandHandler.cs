@@ -4,18 +4,21 @@ using SriSai.Application.Building.Command;
 using SriSai.Application.interfaces.Reposerty;
 using SriSai.Domain.Entity.Building;
 using SriSai.Domain.Errors;
+using SriSai.Domain.Interface;
 
 namespace SriSai.Application.Building.Handler
 {
     public class CreateApartmentCommandHandler
         : IRequestHandler<CreateApartmentCommand, ErrorOr<Guid>>
     {
+        private readonly IDateTimeProvider _dateTimeProvider;
         private readonly IUnitOfWork _unitOfWork;
 
         public CreateApartmentCommandHandler(
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider)
         {
             _unitOfWork = unitOfWork;
+            _dateTimeProvider = dateTimeProvider;
         }
 
         public async Task<ErrorOr<Guid>> Handle(
@@ -33,7 +36,9 @@ namespace SriSai.Application.Building.Handler
             {
                 ApartmentNumber = command.ApartmentNumber,
                 OwnerId = command.OwnerId,
-                RenterId = command.RenterId
+                RenterId = command.RenterId,
+                CreatedBy = command.CreatedById,
+                CreatedDateTime = _dateTimeProvider.GetUtcNow()
             };
             await _unitOfWork.Repository<ApartmentEntity>().AddAsync(apartmentEntity);
             await _unitOfWork.SaveChangesAsync();
