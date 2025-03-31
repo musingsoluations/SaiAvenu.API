@@ -77,7 +77,7 @@ RUN jq -n \
     --arg mwServerUrl "$MW_SERVER_URL" \
     --arg mwApiKey "$MW_APIKEY" \
     --arg mwAppName "$MV_APP_NAME" \
-    '{"Jwt":{"Secret":$secret,"Issuer":$issuer,"Audience":$audience,"ExpiryHours":1},"Logging":{"LogLevel":{"Default":"Information","Microsoft.AspNetCore":"Warning"}},"ConnectionStrings":{"DefaultConnection":$connStr},"AllowedHosts":"*","DatabaseSettings":{"MaxRetryCount":3,"EnableDetailedErrors":false,"EnableSensitiveDataLogging":false},"MW":{"ServiceName":"$mwAppName","TargetURL":"$mwServerUrl","ApiKey":"$mwApiKey"},"WhatsApp":{"BaseUrl":$baseUrl,"SenderId":$senderId,"ApiKey":$apiKey}}' > appsettings.json && \
+    "{\"Jwt\":{\"Secret\":\$secret,\"Issuer\":\$issuer,\"Audience\":\$audience,\"ExpiryHours\":1},\"Logging\":{\"LogLevel\":{\"Default\":\"Information\",\"Microsoft.AspNetCore\":\"Warning\"}},\"ConnectionStrings\":{\"DefaultConnection\":\$connStr},\"AllowedHosts\":\"*\",\"DatabaseSettings\":{\"MaxRetryCount\":3,\"EnableDetailedErrors\":false,\"EnableSensitiveDataLogging\":false},\"MW\":{\"ServiceName\":\$mwAppName,\"TargetURL\":\$mwServerUrl,\"ApiKey\":\$mwApiKey},\"WhatsApp\":{\"BaseUrl\":\$baseUrl,\"SenderId\":\$senderId,\"ApiKey\":\$apiKey}}" > appsettings.json && \
     echo "Verifying JSON validity..." && \
     jq empty appsettings.json && \
     echo "Final configuration (excluding sensitive data):" && \
