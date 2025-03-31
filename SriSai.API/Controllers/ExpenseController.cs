@@ -6,6 +6,7 @@ using SriSai.API.DTOs.Collection;
 using SriSai.Application.Collection.Command;
 using SriSai.Application.Collection.Dtos;
 using SriSai.Application.Collection.Query;
+using System.Security.Claims;
 
 namespace SriSai.API.Controllers
 {
@@ -13,11 +14,13 @@ namespace SriSai.API.Controllers
     [Route("api/[controller]")]
     public class ExpenseController : ControllerBase
     {
+        private readonly ILogger<ExpenseController> _logger;
         private readonly IMediator _mediator;
 
-        public ExpenseController(IMediator mediator)
+        public ExpenseController(IMediator mediator, ILogger<ExpenseController> logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
 
         [HttpGet("monthly")]
@@ -37,11 +40,15 @@ namespace SriSai.API.Controllers
         [Authorize("AdminOnly")]
         public async Task<IActionResult> CreateExpense(CreateExpenseDto dto)
         {
+            _logger.LogInformation("Creating expense");
+            string? userGuid = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             CreateExpenseCommand command = new(
                 dto.Name,
                 dto.Type,
                 dto.Amount,
-                dto.Date);
+                dto.Date,
+                Guid.Parse(userGuid ?? string.Empty)
+            );
 
             ErrorOr<Guid> result = await _mediator.Send(command);
             return result.Match(

@@ -1,35 +1,42 @@
 using ErrorOr;
 using MediatR;
-using SriSai.Domain.Entity.Collection;
 using SriSai.Application.Collection.Command;
 using SriSai.Application.interfaces.Reposerty;
+using SriSai.Domain.Entity.Collection;
+using SriSai.Domain.Interface;
 
-namespace SriSai.Application.Collection.Handler;
-
-public class CreateExpenseCommandHandler : IRequestHandler<CreateExpenseCommand, ErrorOr<Guid>>
+namespace SriSai.Application.Collection.Handler
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public CreateExpenseCommandHandler(IUnitOfWork unitOfWork)
+    public class CreateExpenseCommandHandler : IRequestHandler<CreateExpenseCommand, ErrorOr<Guid>>
     {
-        _unitOfWork = unitOfWork;
-    }
+        private readonly IDateTimeProvider _dateTimeProvider;
+        private readonly IUnitOfWork _unitOfWork;
 
-    public async Task<ErrorOr<Guid>> Handle(
-        CreateExpenseCommand command,
-        CancellationToken cancellationToken)
-    {
-        var entity = new ExpenseEntity
+        public CreateExpenseCommandHandler(IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider)
         {
-            Name = command.Name,
-            Type = command.Type,
-            Amount = command.Amount,
-            Date = command.Date
-        };
+            _unitOfWork = unitOfWork;
+            _dateTimeProvider = dateTimeProvider;
+        }
 
-        await _unitOfWork.Repository<ExpenseEntity>().AddAsync(entity);
-        await _unitOfWork.SaveChangesAsync();
+        public async Task<ErrorOr<Guid>> Handle(
+            CreateExpenseCommand command,
+            CancellationToken cancellationToken)
+        {
+            ExpenseEntity entity = new()
+            {
+                Name = command.Name,
+                Type = command.Type,
+                Amount = command.Amount,
+                Date = command.Date,
+                CreatedBy = command.CreatedBy,
+                CreatedDateTime = _dateTimeProvider.GetUtcNow(),
+                IsDeleted = false
+            };
 
-        return entity.Id;
+            await _unitOfWork.Repository<ExpenseEntity>().AddAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
+
+            return entity.Id;
+        }
     }
 }

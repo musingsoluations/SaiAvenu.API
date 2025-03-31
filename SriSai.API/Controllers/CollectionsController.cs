@@ -46,6 +46,7 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> CreateCollectionDemand(CreateCollectionDemandDto dto)
         {
             _logger.LogInformation("Creating collection demand");
+            string? userGuid = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             CreateCollectionDemandCommand command = new()
             {
                 ApartmentName = dto.ApartmentName,
@@ -54,7 +55,8 @@ namespace SriSai.API.Controllers
                 DueDate = dto.DueDate,
                 PaidDate = dto.PaidDate,
                 ForWhat = dto.ForWhat,
-                Comment = dto.Comment
+                Comment = dto.Comment,
+                CreatedBy = Guid.Parse(userGuid ?? string.Empty)
             };
             ErrorOr<IList<Guid>> result = await _mediator.Send(command);
 

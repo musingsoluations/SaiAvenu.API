@@ -13,5 +13,6 @@ namespace SriSai.Application.Collection.Command
         public DateOnly? PaidDate { get; set; }
         public CollectionType ForWhat { get; set; }
         public string? Comment { get; set; }
+        public Guid CreatedBy { get; set; }
     }
 }
