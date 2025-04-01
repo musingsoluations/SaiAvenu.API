@@ -202,6 +202,7 @@ app.MapHealthChecks("/", new Microsoft.AspNetCore.Diagnostics.HealthChecks.Healt
 app.MapHealthChecksUI(options => 
 {
     options.UIPath = "/health-ui";
+    options.ApiPath = "/";
 });
 
 app.MapControllers();
