@@ -1,11 +1,11 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
@@ -21,9 +21,7 @@ ARG MW_APIKEY
 ARG MV_APP_NAME
 
 # Install jq in build stage
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends jq && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache jq
 
 # Copy solution and project files
 COPY ["SriSaiAPI.sln", "."]
@@ -60,12 +58,9 @@ ARG MW_APIKEY
 ARG MV_APP_NAME
 
 # Install jq in publish stage
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends jq && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache jq
 
 # Configure appsettings.json before publishing
-COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
 RUN jq -n \
     --arg secret "$JWT_SECRET" \
     --arg issuer "$JWT_ISSUER" \
