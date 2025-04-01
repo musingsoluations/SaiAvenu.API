@@ -1,8 +1,7 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
-ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
@@ -73,7 +72,7 @@ ENV MV_APP_NAME=$MV_APP_NAME
 RUN envsubst < appsettings.json > appsettings.tmp.json && \
     mv appsettings.tmp.json appsettings.json && \
     echo "Updated appsettings.json (excluding sensitive data):" && \
-    cat appsettings.json 
+    cat appsettings.json | grep -v "Secret" | grep -v "ApiKey" | grep -v "ConnectionString"
 
 # Publish the application
 RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
@@ -81,5 +80,7 @@ RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-USER $APP_UID
+# Create a non-root user
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
 ENTRYPOINT ["dotnet", "SriSai.API.dll"]
