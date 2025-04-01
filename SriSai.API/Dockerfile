@@ -1,11 +1,11 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
@@ -60,23 +60,19 @@ ARG MV_APP_NAME
 # Install jq in publish stage
 RUN apk add --no-cache jq
 
-# Configure appsettings.json before publishing
-RUN jq -n \
-    --arg secret "$JWT_SECRET" \
-    --arg issuer "$JWT_ISSUER" \
-    --arg audience "$JWT_AUDIENCE" \
-    --arg connStr "$CONNECTION_STRING" \
-    --arg baseUrl "$WHATAAPP_BASEURL" \
-    --arg apiKey "$WHATSAPP_APIKEY" \
-    --arg senderId "$WHATSAPP_SENDERID" \
-    --arg mwServerUrl "$MW_SERVER_URL" \
-    --arg mwApiKey "$MW_APIKEY" \
-    --arg mwAppName "$MV_APP_NAME" \
-    "{\"Jwt\":{\"Secret\":\$secret,\"Issuer\":\$issuer,\"Audience\":\$audience,\"ExpiryHours\":1},\"Logging\":{\"LogLevel\":{\"Default\":\"Information\",\"Microsoft.AspNetCore\":\"Warning\"}},\"ConnectionStrings\":{\"DefaultConnection\":\$connStr},\"AllowedHosts\":\"*\",\"DatabaseSettings\":{\"MaxRetryCount\":3,\"EnableDetailedErrors\":false,\"EnableSensitiveDataLogging\":false},\"MW\":{\"ServiceName\":\$mwAppName,\"TargetURL\":\$mwServerUrl,\"ApiKey\":\$mwApiKey},\"WhatsApp\":{\"BaseUrl\":\$baseUrl,\"SenderId\":\$senderId,\"ApiKey\":\$apiKey}}" > appsettings.json && \
-    echo "Verifying JSON validity..." && \
-    jq empty appsettings.json && \
-    echo "Final configuration (excluding sensitive data):" && \
-    jq 'del(.ConnectionStrings, .Jwt.Secret)' appsettings.json
+# Replace placeholders in appsettings.json
+RUN sed -i \
+    -e "s/#{JWT_SECRET}#/$JWT_SECRET/g" \
+    -e "s/#{JWT_ISSUER}#/$JWT_ISSUER/g" \
+    -e "s/#{JWT_AUDIENCE}#/$JWT_AUDIENCE/g" \
+    -e "s/#{CONNECTION_STRING}#/$CONNECTION_STRING/g" \
+    -e "s/#{WHATAAPP_BASEURL}#/$WHATAAPP_BASEURL/g" \
+    -e "s/#{WHATSAPP_APIKEY}#/$WHATSAPP_APIKEY/g" \
+    -e "s/#{WHATSAPP_SENDERID}#/$WHATSAPP_SENDERID/g" \
+    -e "s/#{MW_SERVER_URL}#/$MW_SERVER_URL/g" \
+    -e "s/#{MW_APIKEY}#/$MW_APIKEY/g" \
+    -e "s/#{MV_APP_NAME}#/$MV_APP_NAME/g" \
+    appsettings.json
 
 # Publish the application
 RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
