@@ -153,7 +153,7 @@ builder.Services.AddHealthChecksUI(options =>
 {
     options.SetEvaluationTimeInSeconds(30); // Evaluate health every 30 seconds
     options.MaximumHistoryEntriesPerEndpoint(60); // Store up to 60 health check results
-    options.AddHealthCheckEndpoint("API", "/health"); // Map the health check endpoint
+    options.AddHealthCheckEndpoint("API", "/"); // Map the health check endpoint to root path
 })
 .AddInMemoryStorage(); // Use in-memory storage for health check history
 
@@ -187,7 +187,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Map health check endpoint with JSON response writer for Health UI
-app.MapHealthChecks("api/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapHealthChecks("/", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
 });
