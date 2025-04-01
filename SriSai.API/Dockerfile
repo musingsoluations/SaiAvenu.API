@@ -1,5 +1,5 @@
 ﻿# Use lightweight .NET runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-chiseled AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080 8081
 ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
