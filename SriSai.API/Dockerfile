@@ -1,13 +1,11 @@
-﻿# Use lightweight .NET runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
-EXPOSE 8080 8081
+EXPOSE 8080
+EXPOSE 8081
 ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_HTTP_PORT=8080
 
-# Build stage using Alpine-based .NET SDK
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
@@ -22,6 +20,11 @@ ARG MW_SERVER_URL
 ARG MW_APIKEY
 ARG MV_APP_NAME
 
+# Install jq in build stage
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends jq && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy solution and project files
 COPY ["SriSaiAPI.sln", "."]
 COPY ["SriSai.API/SriSai.API.csproj", "SriSai.API/"]
@@ -33,22 +36,58 @@ COPY ["SriSai.infrastructure/SriSai.infrastructure.csproj", "SriSai.infrastructu
 RUN dotnet restore "SriSai.API/SriSai.API.csproj"
 
 # Copy the rest of the code
-COPY . .
+COPY ["SriSai.API/", "SriSai.API/"]
+COPY ["SriSai.Application/", "SriSai.Application/"]
+COPY ["SriSai.Domain/", "SriSai.Domain/"]
+COPY ["SriSai.infrastructure/", "SriSai.infrastructure/"]
 
 WORKDIR "/src/SriSai.API"
 
-# Build the application (no unnecessary debugging symbols)
-RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build --no-restore
+# Build the application
+RUN dotnet build "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# Publish stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
+ARG CONNECTION_STRING
+ARG JWT_SECRET
+ARG JWT_ISSUER
+ARG JWT_AUDIENCE
+ARG WHATAAPP_BASEURL
+ARG WHATSAPP_APIKEY
+ARG WHATSAPP_SENDERID
+ARG MW_SERVER_URL
+ARG MW_APIKEY
+ARG MV_APP_NAME
 
-# Publish the app with trimming and without apphost to reduce size
-RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish --no-restore /p:PublishTrimmed=true /p:PublishSingleFile=false /p:EnableCompressionInSingleFile=true /p:SelfContained=false
+# Install jq in publish stage
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends jq && \
+    rm -rf /var/lib/apt/lists/*
 
-# Final runtime stage with minimal image
+# Configure appsettings.json before publishing
+COPY ["SriSai.API/appsettings.json", "./appsettings.json"]
+RUN jq -n \
+    --arg secret "$JWT_SECRET" \
+    --arg issuer "$JWT_ISSUER" \
+    --arg audience "$JWT_AUDIENCE" \
+    --arg connStr "$CONNECTION_STRING" \
+    --arg baseUrl "$WHATAAPP_BASEURL" \
+    --arg apiKey "$WHATSAPP_APIKEY" \
+    --arg senderId "$WHATSAPP_SENDERID" \
+    --arg mwServerUrl "$MW_SERVER_URL" \
+    --arg mwApiKey "$MW_APIKEY" \
+    --arg mwAppName "$MV_APP_NAME" \
+    "{\"Jwt\":{\"Secret\":\$secret,\"Issuer\":\$issuer,\"Audience\":\$audience,\"ExpiryHours\":1},\"Logging\":{\"LogLevel\":{\"Default\":\"Information\",\"Microsoft.AspNetCore\":\"Warning\"}},\"ConnectionStrings\":{\"DefaultConnection\":\$connStr},\"AllowedHosts\":\"*\",\"DatabaseSettings\":{\"MaxRetryCount\":3,\"EnableDetailedErrors\":false,\"EnableSensitiveDataLogging\":false},\"MW\":{\"ServiceName\":\$mwAppName,\"TargetURL\":\$mwServerUrl,\"ApiKey\":\$mwApiKey},\"WhatsApp\":{\"BaseUrl\":\$baseUrl,\"SenderId\":\$senderId,\"ApiKey\":\$apiKey}}" > appsettings.json && \
+    echo "Verifying JSON validity..." && \
+    jq empty appsettings.json && \
+    echo "Final configuration (excluding sensitive data):" && \
+    jq 'del(.ConnectionStrings, .Jwt.Secret)' appsettings.json
+
+# Publish the application
+RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+USER $APP_UID
 ENTRYPOINT ["dotnet", "SriSai.API.dll"]
