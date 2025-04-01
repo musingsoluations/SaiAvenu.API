@@ -54,19 +54,24 @@ ARG MW_SERVER_URL
 ARG MW_APIKEY
 ARG MV_APP_NAME
 
+# Install gettext-base for envsubst
+RUN apt-get update && apt-get install -y gettext-base && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for substitution
+ENV JWT_SECRET=$JWT_SECRET
+ENV JWT_ISSUER=$JWT_ISSUER
+ENV JWT_AUDIENCE=$JWT_AUDIENCE
+ENV CONNECTION_STRING=$CONNECTION_STRING
+ENV WHATAAPP_BASEURL=$WHATAAPP_BASEURL
+ENV WHATSAPP_APIKEY=$WHATSAPP_APIKEY
+ENV WHATSAPP_SENDERID=$WHATSAPP_SENDERID
+ENV MW_SERVER_URL=$MW_SERVER_URL
+ENV MW_APIKEY=$MW_APIKEY
+ENV MV_APP_NAME=$MV_APP_NAME
+
 # Replace placeholders in appsettings.json
-RUN sed -i \
-    -e "s/#{JWT_SECRET}#/$JWT_SECRET/g" \
-    -e "s/#{JWT_ISSUER}#/$JWT_ISSUER/g" \
-    -e "s/#{JWT_AUDIENCE}#/$JWT_AUDIENCE/g" \
-    -e "s/#{CONNECTION_STRING}#/$CONNECTION_STRING/g" \
-    -e "s/#{WHATAAPP_BASEURL}#/$WHATAAPP_BASEURL/g" \
-    -e "s/#{WHATSAPP_APIKEY}#/$WHATSAPP_APIKEY/g" \
-    -e "s/#{WHATSAPP_SENDERID}#/$WHATSAPP_SENDERID/g" \
-    -e "s/#{MW_SERVER_URL}#/$MW_SERVER_URL/g" \
-    -e "s/#{MW_APIKEY}#/$MW_APIKEY/g" \
-    -e "s/#{MV_APP_NAME}#/$MV_APP_NAME/g" \
-    appsettings.json
+RUN envsubst < appsettings.json > appsettings.tmp.json && \
+    mv appsettings.tmp.json appsettings.json
 
 # Publish the application
 RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
