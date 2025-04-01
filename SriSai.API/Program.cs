@@ -19,6 +19,12 @@ using System.Text;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Configure host binding for Azure Web Apps
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(8080); // Listen on all available network interfaces
+});
+
 // Configure configuration sources with proper precedence
 builder.Configuration
     .AddJsonFile("appsettings.json", false, true)
