@@ -102,10 +102,10 @@ jobs:
             az webapp config container set \
               --name ${{ env.AZURE_WEBAPP_NAME }} \
               --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-              --docker-registry-server-url https://${{ env.REGISTRY }} \
-              --docker-registry-server-user ${{ github.actor }} \
-              --docker-registry-server-password ${{ secrets.GHCR_PAT }} \
-              --docker-custom-image-name ${{ env.FULL_IMAGE_NAME }}
+              --container-registry-url https://${{ env.REGISTRY }} \
+              --container-registry-user ${{ github.actor }} \
+              --container-registry-password ${{ secrets.GHCR_PAT }} \
+              --container-image-name ${{ env.FULL_IMAGE_NAME }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
