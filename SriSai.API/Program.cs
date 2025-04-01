@@ -195,7 +195,7 @@ app.MapHealthChecks("/", new Microsoft.AspNetCore.Diagnostics.HealthChecks.Healt
 // Add Health Checks UI dashboard
 app.MapHealthChecksUI(options => 
 {
-    options.UIPath = "api/health-ui";
+    options.UIPath = "/api/health-ui";
 });
 
 app.MapControllers();
