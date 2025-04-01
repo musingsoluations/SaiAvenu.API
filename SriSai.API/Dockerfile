@@ -1,9 +1,10 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
+EXPOSE 8443
+EXPOSE 8444
+ENV ASPNETCORE_URLS=https://+:8443;https://+:8444
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_HTTPS_PORT=8443
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
