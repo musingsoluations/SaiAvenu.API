@@ -1,11 +1,11 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 ENV ASPNETCORE_URLS=http://+:8080;http://+:8081
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
@@ -56,16 +56,16 @@ ARG MV_APP_NAME
 
 # Replace placeholders in appsettings.json
 RUN sed -i \
-    -e "s/#{JWT_SECRET}#/$JWT_SECRET/g" \
-    -e "s/#{JWT_ISSUER}#/$JWT_ISSUER/g" \
-    -e "s/#{JWT_AUDIENCE}#/$JWT_AUDIENCE/g" \
-    -e "s/#{CONNECTION_STRING}#/$CONNECTION_STRING/g" \
-    -e "s/#{WHATAAPP_BASEURL}#/$WHATAAPP_BASEURL/g" \
-    -e "s/#{WHATSAPP_APIKEY}#/$WHATSAPP_APIKEY/g" \
-    -e "s/#{WHATSAPP_SENDERID}#/$WHATSAPP_SENDERID/g" \
-    -e "s/#{MW_SERVER_URL}#/$MW_SERVER_URL/g" \
-    -e "s/#{MW_APIKEY}#/$MW_APIKEY/g" \
-    -e "s/#{MV_APP_NAME}#/$MV_APP_NAME/g" \
+    -e 's/#{JWT_SECRET}#/'"$JWT_SECRET"'/g' \
+    -e 's/#{JWT_ISSUER}#/'"$JWT_ISSUER"'/g' \
+    -e 's/#{JWT_AUDIENCE}#/'"$JWT_AUDIENCE"'/g' \
+    -e 's/#{CONNECTION_STRING}#/'"$CONNECTION_STRING"'/g' \
+    -e 's/#{WHATAAPP_BASEURL}#/'"$WHATAAPP_BASEURL"'/g' \
+    -e 's/#{WHATSAPP_APIKEY}#/'"$WHATSAPP_APIKEY"'/g' \
+    -e 's/#{WHATSAPP_SENDERID}#/'"$WHATSAPP_SENDERID"'/g' \
+    -e 's/#{MW_SERVER_URL}#/'"$MW_SERVER_URL"'/g' \
+    -e 's/#{MW_APIKEY}#/'"$MW_APIKEY"'/g' \
+    -e 's/#{MV_APP_NAME}#/'"$MV_APP_NAME"'/g' \
     appsettings.json
 
 # Publish the application
