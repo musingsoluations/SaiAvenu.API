@@ -71,7 +71,9 @@ ENV MV_APP_NAME=$MV_APP_NAME
 
 # Replace placeholders in appsettings.json
 RUN envsubst < appsettings.json > appsettings.tmp.json && \
-    mv appsettings.tmp.json appsettings.json
+    mv appsettings.tmp.json appsettings.json && \
+    echo "Updated appsettings.json (excluding sensitive data):" && \
+    cat appsettings.json 
 
 # Publish the application
 RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
