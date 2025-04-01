@@ -57,9 +57,6 @@ ARG MW_SERVER_URL
 ARG MW_APIKEY
 ARG MV_APP_NAME
 
-# Install jq in publish stage
-RUN apk add --no-cache jq
-
 # Replace placeholders in appsettings.json
 RUN sed -i \
     -e "s/#{JWT_SECRET}#/$JWT_SECRET/g" \
