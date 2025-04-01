@@ -20,9 +20,6 @@ ARG MW_SERVER_URL
 ARG MW_APIKEY
 ARG MV_APP_NAME
 
-# Install jq in build stage
-RUN apk add --no-cache jq
-
 # Copy solution and project files
 COPY ["SriSaiAPI.sln", "."]
 COPY ["SriSai.API/SriSai.API.csproj", "SriSai.API/"]
