@@ -140,6 +140,23 @@ builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSecti
 // Register WhatsApp service
 // builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
 
+// Add health checks
+builder.Services.AddHealthChecks()
+    // Add SQL Server health check using connection string
+    .AddSqlServer(
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
+        name: "sql-server-connection",
+        tags: new[] { "db", "sql", "sqlserver" });
+
+// Add Health Checks UI services
+builder.Services.AddHealthChecksUI(options => 
+{
+    options.SetEvaluationTimeInSeconds(30); // Evaluate health every 30 seconds
+    options.MaximumHistoryEntriesPerEndpoint(60); // Store up to 60 health check results
+    options.AddHealthCheckEndpoint("API", "/health"); // Map the health check endpoint
+})
+.AddInMemoryStorage(); // Use in-memory storage for health check history
+
 WebApplication app = builder.Build();
 
 Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
@@ -148,6 +165,7 @@ Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
 using IServiceScope scope = app.Services.CreateScope();
 DatabaseMigrationService migrationService = scope.ServiceProvider.GetRequiredService<DatabaseMigrationService>();
 await migrationService.StartAsync(CancellationToken.None);
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -167,6 +185,19 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map health check endpoint with JSON response writer for Health UI
+app.MapHealthChecks("api/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+// Add Health Checks UI dashboard
+app.MapHealthChecksUI(options => 
+{
+    options.UIPath = "api/health-ui";
+});
+
 app.MapControllers();
 
 app.Run();
