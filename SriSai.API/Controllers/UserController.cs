@@ -22,17 +22,21 @@ namespace SriSai.API.Controllers
         private readonly IMediator _mediator;
         private readonly IValidator<UserProfileDto> _userProfileValidator;
         private readonly IValidator<CreateUserDto> _validator;
+        private readonly IValidator<ResetPasswordDto> _resetPasswordValidator;
 
         public UserController(
             IMediator mediator,
             IValidator<CreateUserDto> validator,
-            IJwtTokenService jwtTokenService, IValidator<UserProfileDto> userProfileValidator,
+            IJwtTokenService jwtTokenService, 
+            IValidator<UserProfileDto> userProfileValidator,
+            IValidator<ResetPasswordDto> resetPasswordValidator,
             ILogger<UserController> logger)
         {
             _mediator = mediator;
             _validator = validator;
             _jwtTokenService = jwtTokenService;
             _userProfileValidator = userProfileValidator;
+            _resetPasswordValidator = resetPasswordValidator;
             _logger = logger;
         }
 
@@ -162,6 +166,39 @@ namespace SriSai.API.Controllers
                 }),
                 errors => new ObjectResult(new ProblemDetails
                 {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                }));
+        }
+
+        [HttpPost("reset-password")]
+        [Authorize("AdminOnly")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto resetPasswordDto)
+        {
+            _logger.LogInformation("Starting password reset process for mobile: {MobileNumber}", resetPasswordDto.MobileNumber);
+            
+            ValidationResult? validationResult = await _resetPasswordValidator.ValidateAsync(resetPasswordDto);
+            if (validationResult.IsValid == false)
+            {
+                return new ObjectResult(new ProblemDetails
+                {
+                    Status = 400,
+                    Title = "Validation Error",
+                    Detail = "One or more validation errors occurred",
+                    Extensions = { ["errors"] = validationResult.Errors.Select(e => e.ErrorMessage).ToArray() }
+                });
+            }
+            
+            // Create and send the reset password command
+            ResetPasswordCommand command = new(resetPasswordDto.MobileNumber);
+            ErrorOr<string> result = await _mediator.Send(command);
+            
+            return result.Match(
+                newPassword => Ok(new { Message = "Password has been reset successfully", NewPassword = newPassword }),
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Status = 404,
+                    Title = "Reset Password Error",
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 }));
