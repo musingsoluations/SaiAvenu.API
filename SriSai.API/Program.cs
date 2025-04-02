@@ -21,6 +21,7 @@ using System.Text;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+
 // Configure configuration sources with proper precedence
 builder.Configuration
     .AddJsonFile("appsettings.json", false, true)
@@ -178,6 +179,10 @@ if (app.Environment.IsDevelopment())
             new KeyValuePair<ScalarTarget, ScalarClient>(ScalarTarget.CSharp, ScalarClient.HttpClient);
         options.ShowSidebar = true;
     });
+}
+else
+{
+    builder.WebHost.UseUrls("http://*:8080");
 }
 
 app.UseHttpsRedirection();
