@@ -16,9 +16,28 @@ using SriSai.Domain.DependencyInjection;
 using SriSai.infrastructure.DependencyInjection;
 using SriSai.infrastructure.Persistent.DbContext;
 using System.Text;
+using System.Net;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel to use Azure environment variables for IP and port
+var port = int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var p) ? p : 8080;
+var ipAddress = Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_IP");
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    if (!string.IsNullOrEmpty(ipAddress) && IPAddress.TryParse(ipAddress, out var ip))
+    {
+        serverOptions.Listen(ip, port);
+    }
+    else
+    {
+        serverOptions.ListenAnyIP(port);
+    }
+});
+
+// Store the configured port for HealthChecks UI
+var healthCheckPort = port;
 // Configure configuration sources with proper precedence
 builder.Configuration
     .AddJsonFile("appsettings.json", false, true)
@@ -149,13 +168,15 @@ builder.Services.AddHealthChecks()
         tags: new[] { "db", "sql", "sqlserver" });
 
 // Add Health Checks UI services
-builder.Services.AddHealthChecksUI(options => 
+builder.Services.AddHealthChecksUI(options =>
 {
     options.SetEvaluationTimeInSeconds(30); // Evaluate health every 30 seconds
     options.MaximumHistoryEntriesPerEndpoint(60); // Store up to 60 health check results
-    
+
     // The health check endpoint will be configured dynamically based on the current request
-    options.AddHealthCheckEndpoint("API", "/health");
+    // Use Azure environment hostname when available, otherwise localhost
+    var hostName = Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME") ?? "localhost";
+    options.AddHealthCheckEndpoint("API", $"{(hostName.Contains("localhost") ? "http" : "https")}://{hostName}:{healthCheckPort}/health");
 })
 .AddInMemoryStorage(); // Use in-memory storage for health check history
 
@@ -195,7 +216,7 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
 });
 
 // Add Health Checks UI dashboard
-app.MapHealthChecksUI(options => 
+app.MapHealthChecksUI(options =>
 {
     options.UIPath = "/health-ui";
     options.ApiPath = "/health-api";
