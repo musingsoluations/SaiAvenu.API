@@ -192,6 +192,11 @@ app.MapHealthChecks("/health",
         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse, AllowCachingResponses = false
     });
 app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+app.UseHealthChecks("/",
+    new HealthCheckOptions
+    {
+        Predicate = _ => false
+    });
 
 app.MapControllers();
 
