@@ -141,7 +141,7 @@ builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSecti
 builder.Services.AddHealthChecks()
     // Add SQL Server health check
     .AddSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
+        connectionString ?? string.Empty,
         name: "sql-server-connection",
         tags: new[] { "db", "sql", "sqlserver" });
 
@@ -151,7 +151,7 @@ builder.Services.AddHealthChecksUI(setup =>
         setup.SetEvaluationTimeInSeconds(60); // Evaluate every 60 seconds
         setup.MaximumHistoryEntriesPerEndpoint(50); // Keep 50 entries in history
         setup.SetApiMaxActiveRequests(3); // Max concurrent requests
-        
+
         // Add endpoints to monitor
         setup.AddHealthCheckEndpoint("API Health", "/health");
     })
@@ -191,11 +191,10 @@ app.MapHealthChecks("/health",
     {
         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse, AllowCachingResponses = false
     });
-app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 app.UseHealthChecks("/",
     new HealthCheckOptions
     {
-        Predicate = _ => false
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse, AllowCachingResponses = false
     });
 
 app.MapControllers();
