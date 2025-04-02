@@ -18,7 +18,7 @@ namespace SriSai.Application.Messaging.Handler
         {
             _messageSender = messageSender;
             _whatsAppConfiguration = whatsAppConfiguration.Value;
-            HeaderTemplates.Add("SRISAI_1", "https://img.freepik.com/free-vector/paying-bills-concept-illustration_114360-22927.jpg?t=st=1743190756~exp=1743194356~hmac=ab6a2517650458bc806f14be22902fd38dffe047bf9c79853ff06047d424edb4&w=1380");
+            HeaderTemplates.Add("srisai_2", "https://img.freepik.com/free-vector/paying-bills-concept-illustration_114360-22927.jpg?t=st=1743190756~exp=1743194356~hmac=ab6a2517650458bc806f14be22902fd38dffe047bf9c79853ff06047d424edb4&w=1380");
         }
 
         public async Task<ErrorOr<Unit>> Handle(SendMessageCommand request, CancellationToken cancellationToken)

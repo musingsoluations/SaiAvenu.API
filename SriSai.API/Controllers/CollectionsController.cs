@@ -1,4 +1,6 @@
 using ErrorOr;
+using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +8,7 @@ using SriSai.API.DTOs.Collection;
 using SriSai.Application.Collection.Command;
 using SriSai.Application.Collection.Dtos;
 using SriSai.Application.Collection.Query;
+using SriSai.Application.Messaging.Command;
 using System.Security.Claims;
 
 namespace SriSai.API.Controllers
@@ -16,11 +19,16 @@ namespace SriSai.API.Controllers
     {
         private readonly ILogger<CollectionsController> _logger;
         private readonly IMediator _mediator;
+        private readonly IValidator<PaymentReminderRequestDto> _paymentReminderValidator;
 
-        public CollectionsController(IMediator mediator, ILogger<CollectionsController> logger)
+        public CollectionsController(
+            IMediator mediator, 
+            ILogger<CollectionsController> logger,
+            IValidator<PaymentReminderRequestDto> paymentReminderValidator)
         {
             _mediator = mediator;
             _logger = logger;
+            _paymentReminderValidator = paymentReminderValidator;
         }
 
         [HttpGet("unpaid")]
@@ -164,6 +172,46 @@ namespace SriSai.API.Controllers
             return result.Match(
                 totals => Ok(totals),
                 errors => Problem(string.Join(", ", errors.Select(e => e.Code))));
+        }
+
+        [HttpPost("send-reminder")]
+        [Authorize("AdminOnly")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> SendPaymentReminder([FromBody] PaymentReminderRequestDto dto)
+        {
+            _logger.LogInformation("Sending payment reminder");
+            
+            ValidationResult validationResult = await _paymentReminderValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                return new ObjectResult(new ProblemDetails
+                {
+                    Status = 400,
+                    Title = "Validation Error",
+                    Detail = "One or more validation errors occurred",
+                    Extensions = { ["errors"] = validationResult.Errors.Select(e => e.ErrorMessage).ToArray() }
+                });
+            }
+            
+            var command = new PaymentReminderCommand
+            {
+                ApartmentName = dto.ApartmentName,
+                RequiredAmount = dto.RequiredAmount.ToString(),
+                RequiredFor = dto.RequiredFor,
+                ForMonth = dto.ForMonth.ToString("MMMM yyyy"),
+                PaymentDueDate = dto.PaymentDueDate.ToString("dd/MM/yyyy")
+            };
+
+            ErrorOr<Unit> result = await _mediator.Send(command);
+
+            return result.Match<IActionResult>(
+                _ => Ok(),
+                errors => new ObjectResult(new ProblemDetails
+                {
+                    Detail = result.Errors.FirstOrDefault().Description,
+                    Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
+                })
+            );
         }
     }
 }

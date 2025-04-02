@@ -19,12 +19,6 @@ using System.Text;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Configure host binding for Azure Web Apps
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(8080); // Listen on all available network interfaces
-});
-
 // Configure configuration sources with proper precedence
 builder.Configuration
     .AddJsonFile("appsettings.json", false, true)
@@ -159,7 +153,9 @@ builder.Services.AddHealthChecksUI(options =>
 {
     options.SetEvaluationTimeInSeconds(30); // Evaluate health every 30 seconds
     options.MaximumHistoryEntriesPerEndpoint(60); // Store up to 60 health check results
-    options.AddHealthCheckEndpoint("API", "/"); // Map the health check endpoint to root path
+    
+    // The health check endpoint will be configured dynamically based on the current request
+    options.AddHealthCheckEndpoint("API", "/health");
 })
 .AddInMemoryStorage(); // Use in-memory storage for health check history
 
@@ -193,7 +189,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Map health check endpoint with JSON response writer for Health UI
-app.MapHealthChecks("/", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     ResponseWriter = HealthChecks.UI.Client.UIResponseWriter.WriteHealthCheckUIResponse
 });
@@ -202,7 +198,7 @@ app.MapHealthChecks("/", new Microsoft.AspNetCore.Diagnostics.HealthChecks.Healt
 app.MapHealthChecksUI(options => 
 {
     options.UIPath = "/health-ui";
-    options.ApiPath = "/";
+    options.ApiPath = "/health-api";
 });
 
 app.MapControllers();
