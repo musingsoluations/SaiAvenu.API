@@ -1,7 +1,7 @@
 using FluentValidation;
-using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Middleware.APM;
@@ -18,6 +18,7 @@ using SriSai.Domain.DependencyInjection;
 using SriSai.infrastructure.DependencyInjection;
 using SriSai.infrastructure.Persistent.DbContext;
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides; // Added for Forwarded Headers
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -137,26 +138,9 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Configure WhatsApp settings using options pattern
 builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSection("WhatsApp"));
-
-// Add health checks
+// Add Health Checks
 builder.Services.AddHealthChecks()
-    // Add SQL Server health check
-    .AddSqlServer(
-        connectionString ?? string.Empty,
-        name: "sql-server-connection",
-        tags: new[] { "db", "sql", "sqlserver" });
-
-// Add health check UI
-builder.Services.AddHealthChecksUI(setup =>
-    {
-        setup.SetEvaluationTimeInSeconds(60); // Evaluate every 60 seconds
-        setup.MaximumHistoryEntriesPerEndpoint(50); // Keep 50 entries in history
-        setup.SetApiMaxActiveRequests(3); // Max concurrent requests
-
-        // Add endpoints to monitor
-        setup.AddHealthCheckEndpoint("API Health", "/health");
-    })
-    .AddInMemoryStorage(); // Store health check results in memory
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "SQL Server", tags: new[] { "db", "sql", "sqlserver" });
 
 WebApplication app = builder.Build();
 Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
@@ -180,27 +164,25 @@ if (app.Environment.IsDevelopment())
         options.ShowSidebar = true;
     });
 }
-else
+// Map Health Checks endpoint
+app.MapHealthChecks("/", new HealthCheckOptions
 {
-    builder.WebHost.UseUrls("http://*:8080");
-}
+    Predicate = _ => true, // Include all checks
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse // Use UI-friendly response writer
+});
+
+// Configure Forwarded Headers Middleware
+// Important: This should come before UseHttpsRedirection
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map health check endpoints
-app.MapHealthChecks("/health",
-    new HealthCheckOptions
-    {
-        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse, AllowCachingResponses = false
-    });
-app.UseHealthChecks("/",
-    new HealthCheckOptions
-    {
-        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse, AllowCachingResponses = false
-    });
 
 app.MapControllers();
 
