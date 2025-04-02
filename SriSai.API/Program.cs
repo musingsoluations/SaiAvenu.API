@@ -18,6 +18,7 @@ using SriSai.Domain.DependencyInjection;
 using SriSai.infrastructure.DependencyInjection;
 using SriSai.infrastructure.Persistent.DbContext;
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides; // Added for Forwarded Headers
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -170,7 +171,13 @@ app.MapHealthChecks("/", new HealthCheckOptions
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse // Use UI-friendly response writer
 });
 
-app.UseHttpsRedirection();
+// Configure Forwarded Headers Middleware
+// Important: This should come before UseHttpsRedirection
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
