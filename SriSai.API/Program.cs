@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Middleware.APM;
@@ -136,6 +137,9 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Configure WhatsApp settings using options pattern
 builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSection("WhatsApp"));
+// Add Health Checks
+builder.Services.AddHealthChecks()
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "SQL Server", tags: new[] { "db", "sql", "sqlserver" });
 
 WebApplication app = builder.Build();
 Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
@@ -159,7 +163,14 @@ if (app.Environment.IsDevelopment())
         options.ShowSidebar = true;
     });
 }
+// Map Health Checks endpoint
+app.MapHealthChecks("/", new HealthCheckOptions
+{
+    Predicate = _ => true, // Include all checks
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse // Use UI-friendly response writer
+});
 
+app.UseHttpsRedirection();
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
