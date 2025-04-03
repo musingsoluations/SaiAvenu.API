@@ -149,7 +149,7 @@ builder.Services.AddHealthChecksUI(options =>
     options.SetEvaluationTimeInSeconds(15); // Evaluate health every 15 seconds
     options.MaximumHistoryEntriesPerEndpoint(50); // Keep history of last 50 checks
     options.SetApiMaxActiveRequests(1); // Limit parallel requests
-    options.AddHealthCheckEndpoint("API", $"http://{Dns.GetHostName()}/health"); // Map health check endpoint
+    options.AddHealthCheckEndpoint("API", $"http://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}:8080/health"); // Map health check endpoint
 })
 .AddInMemoryStorage(); // Use in-memory storage for health check history
 
