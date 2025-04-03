@@ -50,6 +50,7 @@ builder.Services.AddOpenTelemetry()
                 activity.SetTag("user.id", httpRequest.HttpContext.User?.FindFirst("sub")?.Value);
             };
             options.Filter = httpContext => httpContext.Request.Path != "/health";
+            options.RecordException = true;
         });
         tracing.AddHttpClientInstrumentation(); // Trace outgoing HTTP calls
 
