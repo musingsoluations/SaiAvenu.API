@@ -142,6 +142,16 @@ builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSecti
 builder.Services.AddHealthChecks()
     .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "SQL Server", tags: new[] { "db", "sql", "sqlserver" });
 
+// Add Health Checks UI with InMemory storage
+builder.Services.AddHealthChecksUI(options =>
+{
+    options.SetEvaluationTimeInSeconds(30); // Evaluate health every 30 seconds
+    options.MaximumHistoryEntriesPerEndpoint(50); // Keep history of last 50 checks
+    options.SetApiMaxActiveRequests(1); // Limit parallel requests
+    options.AddHealthCheckEndpoint("API", "/health"); // Map health endpoint
+})
+.AddInMemoryStorage(); // Use in-memory storage for health history
+
 WebApplication app = builder.Build();
 Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
 
@@ -165,10 +175,17 @@ if (app.Environment.IsDevelopment())
     });
 }
 // Map Health Checks endpoint
-app.MapHealthChecks("/", new HealthCheckOptions
+app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => true, // Include all checks
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse // Use UI-friendly response writer
+});
+
+// Map Health Checks UI endpoint
+app.MapHealthChecksUI(options =>
+{
+    options.UIPath = "/healthchecks-ui"; // UI available at /healthchecks-ui
+    options.ApiPath = "/healthchecks-api"; // API available at /healthchecks-api
 });
 
 // Configure Forwarded Headers Middleware
