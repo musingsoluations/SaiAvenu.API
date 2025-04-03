@@ -1,10 +1,16 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# Install ICU libraries for globalization support
+RUN apk add --no-cache icu-libs
+
+# Set globalization invariant mode to false to use ICU
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
@@ -53,8 +59,8 @@ ARG MW_SERVER_URL
 ARG MW_APIKEY
 ARG MV_APP_NAME
 
-# Install gettext-base for envsubst
-RUN apt-get update && apt-get install -y gettext-base && rm -rf /var/lib/apt/lists/*
+# Install gettext for envsubst (Alpine version)
+RUN apk add --no-cache gettext
 
 # Set environment variables for substitution
 ENV JWT_SECRET=$JWT_SECRET
@@ -80,7 +86,14 @@ RUN dotnet publish "SriSai.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Install SQL Server client dependencies for Alpine
+RUN apk add --no-cache \
+    libc6-compat \
+    libstdc++ \
+    libintl
+
 # Create a non-root user
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+RUN adduser -D -H -u 1000 appuser && chown -R appuser /app
 USER appuser
 ENTRYPOINT ["dotnet", "SriSai.API.dll"]
