@@ -66,10 +66,9 @@ builder.Logging.AddOpenTelemetry(logging =>
 {
     logging.IncludeFormattedMessage = true;
     logging.IncludeScopes = true;
-
+    logging.ParseStateValues = true;
     logging.SetResourceBuilder(ResourceBuilder.CreateDefault()
         .AddService(builder.Configuration["MW:ServiceName"] ?? "DefaultService"));
-
     logging.AddOtlpExporter(o =>
     {
         o.Endpoint = new Uri(builder.Configuration["MW:TargetURL"] ?? "");
