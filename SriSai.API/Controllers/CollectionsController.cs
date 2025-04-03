@@ -22,7 +22,7 @@ namespace SriSai.API.Controllers
         private readonly IValidator<PaymentReminderRequestDto> _paymentReminderValidator;
 
         public CollectionsController(
-            IMediator mediator, 
+            IMediator mediator,
             ILogger<CollectionsController> logger,
             IValidator<PaymentReminderRequestDto> paymentReminderValidator)
         {
@@ -131,7 +131,8 @@ namespace SriSai.API.Controllers
             _logger.LogInformation($"Getting self-paid collection for {userId}");
             GetCollectionExpenseSelfQuery query = new()
             {
-                Year = year, CurrentUserId = Guid.Parse(userId ?? string.Empty)
+                Year = year,
+                CurrentUserId = Guid.Parse(userId ?? string.Empty)
             };
 
             ErrorOr<List<ChartDataItem>> result = await _mediator.Send(query);
@@ -180,7 +181,7 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> SendPaymentReminder([FromBody] PaymentReminderRequestDto dto)
         {
             _logger.LogInformation("Sending payment reminder");
-            
+
             ValidationResult validationResult = await _paymentReminderValidator.ValidateAsync(dto);
             if (!validationResult.IsValid)
             {
@@ -192,7 +193,7 @@ namespace SriSai.API.Controllers
                     Extensions = { ["errors"] = validationResult.Errors.Select(e => e.ErrorMessage).ToArray() }
                 });
             }
-            
+
             var command = new PaymentReminderCommand
             {
                 ApartmentName = dto.ApartmentName,

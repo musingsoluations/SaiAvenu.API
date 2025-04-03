@@ -1,7 +1,7 @@
 using ErrorOr;
 using MediatR;
-using SriSai.Application.interfaces.Reposerty;
 using SriSai.Application.Building.Query;
+using SriSai.Application.interfaces.Reposerty;
 using SriSai.Domain.Entity.Building;
 
 namespace SriSai.Application.Building.Handler;

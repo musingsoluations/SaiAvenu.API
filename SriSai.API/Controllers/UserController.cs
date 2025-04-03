@@ -27,7 +27,7 @@ namespace SriSai.API.Controllers
         public UserController(
             IMediator mediator,
             IValidator<CreateUserDto> validator,
-            IJwtTokenService jwtTokenService, 
+            IJwtTokenService jwtTokenService,
             IValidator<UserProfileDto> userProfileValidator,
             IValidator<ResetPasswordDto> resetPasswordValidator,
             ILogger<UserController> logger)
@@ -147,7 +147,7 @@ namespace SriSai.API.Controllers
                 }));
         }
 
-// force deploy to test
+        // force deploy to test
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginUserDto loginUserDto)
@@ -176,7 +176,7 @@ namespace SriSai.API.Controllers
         public async Task<IActionResult> ResetPassword(ResetPasswordDto resetPasswordDto)
         {
             _logger.LogInformation("Starting password reset process for mobile: {MobileNumber}", resetPasswordDto.MobileNumber);
-            
+
             ValidationResult? validationResult = await _resetPasswordValidator.ValidateAsync(resetPasswordDto);
             if (validationResult.IsValid == false)
             {
@@ -188,11 +188,11 @@ namespace SriSai.API.Controllers
                     Extensions = { ["errors"] = validationResult.Errors.Select(e => e.ErrorMessage).ToArray() }
                 });
             }
-            
+
             // Create and send the reset password command
             ResetPasswordCommand command = new(resetPasswordDto.MobileNumber);
             ErrorOr<string> result = await _mediator.Send(command);
-            
+
             return result.Match(
                 newPassword => Ok(new { Message = "Password has been reset successfully", NewPassword = newPassword }),
                 errors => new ObjectResult(new ProblemDetails

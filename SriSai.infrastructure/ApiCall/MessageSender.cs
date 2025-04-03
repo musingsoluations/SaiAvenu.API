@@ -1,9 +1,9 @@
-using System.Net.Http;
 using ErrorOr;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SriSai.Application.Configuration;
 using SriSai.Application.interfaces.ApiCalls;
+using System.Net.Http;
 
 namespace SriSai.infrastructure.ApiCall
 {
@@ -25,7 +25,7 @@ namespace SriSai.infrastructure.ApiCall
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                
+
                 // Build the URL with query parameters
                 var queryParams = new List<string>
                 {
@@ -44,12 +44,12 @@ namespace SriSai.infrastructure.ApiCall
                 }
 
                 var url = $"{_whatsAppConfiguration.BaseUrl}?{string.Join("&", queryParams)}";
-                
+
                 _logger.LogInformation("Sending WhatsApp message to URL: {Url}", url);
-                
+
                 var response = await client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
-                
+
                 _logger.LogInformation("WhatsApp message sent successfully");
                 return true;
             }

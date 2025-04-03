@@ -1,8 +1,8 @@
+using Microsoft.IdentityModel.Tokens;
+using SriSai.Application.Users.Query;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
-using SriSai.Application.Users.Query;
 
 namespace SriSai.API.Services.Auth;
 

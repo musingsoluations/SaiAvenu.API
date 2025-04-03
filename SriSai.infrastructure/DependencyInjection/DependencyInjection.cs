@@ -27,10 +27,10 @@ public static class DependencyInjection
         // Security Services
         services.AddSingleton<IHashPassword, BCryptPasswordHasher>();
         services.AddSingleton<IVerifyPassword, BCryptPasswordVerifier>();
-        
+
         // HTTP Client Factory
         services.AddHttpClient();
-        
+
         // API Call Services
         services.AddScoped<IMessageSender, MessageSender>();
 

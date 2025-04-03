@@ -4,4 +4,4 @@ public record TotalAmountsDto(
     decimal TotalPayments,
     decimal TotalExpenses,
     decimal TotalCarryForwardPayments
-); 
+);

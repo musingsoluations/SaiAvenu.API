@@ -1,7 +1,8 @@
 using FluentValidation;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Middleware.APM;
@@ -18,8 +19,8 @@ using SriSai.Domain.DependencyInjection;
 using SriSai.infrastructure.DependencyInjection;
 using SriSai.infrastructure.Persistent.DbContext;
 using System.Text;
-using Microsoft.AspNetCore.HttpOverrides;
-using System.Net; // Added for Forwarded Headers
+
+// Added for Forwarded Headers
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -40,7 +41,15 @@ builder.Services.AddOpenTelemetry()
         tracing.SetResourceBuilder(ResourceBuilder.CreateDefault()
             .AddService(builder.Configuration["MW:ServiceName"] ?? "DefaultService"));
 
-        tracing.AddAspNetCoreInstrumentation(); // Auto-trace ASP.NET Core requests
+        tracing.AddAspNetCoreInstrumentation(options =>
+        {
+            options.EnrichWithHttpRequest = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.method", httpRequest.Method);
+                activity.SetTag("http.url", httpRequest.Path);
+                activity.SetTag("user.id", httpRequest.HttpContext.User?.FindFirst("sub")?.Value);
+            };
+        });
         tracing.AddHttpClientInstrumentation(); // Trace outgoing HTTP calls
 
         tracing.AddOtlpExporter(o =>
@@ -95,7 +104,8 @@ builder.Services.AddAuthentication(options =>
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey =
-                new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"] ?? string.Empty)),
+                new SymmetricSecurityKey(
+                    Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"] ?? string.Empty)),
             ValidateIssuer = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidateAudience = true,
@@ -141,21 +151,22 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.Configure<WhatsAppConfiguration>(builder.Configuration.GetSection("WhatsApp"));
 // Add Health Checks
 builder.Services.AddHealthChecks()
-    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "SQL Server", tags: new[] { "db", "sql", "sqlserver" });
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "SQL Server",
+        tags: new[] { "db", "sql", "sqlserver" });
 
 // Add Health Checks UI
-var healthCheckUrl = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development" 
-? $"http://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}:8080/health" 
-: $"https://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/health";
+string healthCheckUrl = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development"
+    ? $"http://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}:8080/health"
+    : $"https://{Environment.GetEnvironmentVariable("WEBSITE_HOSTNAME")}/health";
 
 builder.Services.AddHealthChecksUI(options =>
-{
-    options.SetEvaluationTimeInSeconds(15); // Evaluate health every 15 seconds
-    options.MaximumHistoryEntriesPerEndpoint(50); // Keep history of last 50 checks
-    options.SetApiMaxActiveRequests(1); // Limit parallel requests
-    options.AddHealthCheckEndpoint("API", healthCheckUrl); // Map health check endpoint
-})
-.AddInMemoryStorage(); // Use in-memory storage for health check history
+    {
+        options.SetEvaluationTimeInSeconds(15); // Evaluate health every 15 seconds
+        options.MaximumHistoryEntriesPerEndpoint(50); // Keep history of last 50 checks
+        options.SetApiMaxActiveRequests(1); // Limit parallel requests
+        options.AddHealthCheckEndpoint("API", healthCheckUrl); // Map health check endpoint
+    })
+    .AddInMemoryStorage(); // Use in-memory storage for health check history
 
 WebApplication app = builder.Build();
 Logger.Init(app.Services.GetRequiredService<ILoggerFactory>());
@@ -179,6 +190,7 @@ if (app.Environment.IsDevelopment())
         options.ShowSidebar = true;
     });
 }
+
 // Map Health Checks endpoint
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
@@ -194,7 +206,7 @@ app.MapHealthChecks("/", new HealthCheckOptions
 });
 
 // Map Health Checks UI endpoint
-app.MapHealthChecksUI(options => 
+app.MapHealthChecksUI(options =>
 {
     options.UIPath = "/healthchecks-ui"; // The UI will be available at /healthchecks-ui
     options.ApiPath = "/healthchecks-api"; // The API that the UI will use

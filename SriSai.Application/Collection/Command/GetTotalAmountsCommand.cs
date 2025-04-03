@@ -4,4 +4,4 @@ using SriSai.Application.Collection.Dtos;
 
 namespace SriSai.Application.Collection.Command;
 
-public record GetTotalAmountsCommand() : IRequest<ErrorOr<TotalAmountsDto>>; 
+public record GetTotalAmountsCommand() : IRequest<ErrorOr<TotalAmountsDto>>;

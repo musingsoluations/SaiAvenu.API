@@ -8,4 +8,4 @@ namespace SriSai.API.DTOs.Collection
         public DateOnly ForMonth { get; set; }
         public DateOnly PaymentDueDate { get; set; }
     }
-} 
+}

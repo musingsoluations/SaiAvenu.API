@@ -25,11 +25,11 @@ public class GetTotalAmountsCommandHandler : IRequestHandler<GetTotalAmountsComm
         var totalPayments = payments.Sum(p => p.Amount);
 
         var expenses = await _unitOfWork.Repository<ExpenseEntity>()
-            .FindAllForConditionAsync(x=>!x.IsDeleted);
+            .FindAllForConditionAsync(x => !x.IsDeleted);
         var totalExpenses = expenses.Sum(e => e.Amount);
 
         var carryForwardPayments = await _unitOfWork.Repository<CarryForwardPayment>()
-            .FindAllForConditionAsync(x=>!x.IsDeleted);
+            .FindAllForConditionAsync(x => !x.IsDeleted);
         var totalCarryForwardPayments = carryForwardPayments.Sum(c => c.Amount);
 
         return new TotalAmountsDto(
@@ -38,4 +38,4 @@ public class GetTotalAmountsCommandHandler : IRequestHandler<GetTotalAmountsComm
             totalCarryForwardPayments
         );
     }
-} 
+}

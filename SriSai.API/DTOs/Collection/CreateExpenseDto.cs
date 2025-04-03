@@ -6,4 +6,4 @@ public record CreateExpenseDto(
     string Name,
     ExpenseType Type,
     decimal Amount,
-    DateOnly Date); 
+    DateOnly Date);

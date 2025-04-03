@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
-using SriSai.Domain.Interface;
 using SriSai.Domain.Imp;
+using SriSai.Domain.Interface;
 
 namespace SriSai.Domain.DependencyInjection;
 

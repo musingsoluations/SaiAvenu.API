@@ -34,4 +34,4 @@ namespace SriSai.API.DTOs.Collection.Validation
                 .WithMessage("Payment due date must be on or after the month");
         }
     }
-} 
+}
