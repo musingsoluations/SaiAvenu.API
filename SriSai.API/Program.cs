@@ -49,10 +49,16 @@ builder.Services.AddOpenTelemetry()
                 activity.SetTag("http.url", httpRequest.Path);
                 activity.SetTag("user.id", httpRequest.HttpContext.User?.FindFirst("sub")?.Value);
             };
-            options.Filter = httpContext => httpContext.Request.Path != "/health";
             options.RecordException = true;
         });
-        tracing.AddHttpClientInstrumentation(); // Trace outgoing HTTP calls
+        tracing.AddHttpClientInstrumentation(x=>{
+            x.RecordException = true;
+            x.EnrichWithHttpRequestMessage = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.status_code", httpRequest.Method);
+                activity.SetTag("http.url", httpRequest.RequestUri?.ToString());
+            };
+        }); // Trace outgoing HTTP calls
 
         tracing.AddOtlpExporter(o =>
         {
