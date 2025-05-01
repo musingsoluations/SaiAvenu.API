@@ -1,5 +1,4 @@
 using FluentValidation;
-using SriSai.API.DTOs.Collection;
 
 namespace SriSai.API.DTOs.Collection.Validation
 {
@@ -16,12 +15,6 @@ namespace SriSai.API.DTOs.Collection.Validation
             RuleFor(x => x.RequiredAmount)
                 .GreaterThan(0)
                 .WithMessage("Required amount must be greater than 0");
-
-            RuleFor(x => x.RequiredFor)
-                .NotEmpty()
-                .WithMessage("Required for field is required")
-                .MaximumLength(200)
-                .WithMessage("Required for field must not exceed 100 characters");
 
             RuleFor(x => x.ForMonth)
                 .NotEmpty()
