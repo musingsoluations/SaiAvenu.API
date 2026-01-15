@@ -8,6 +8,7 @@ using SriSai.API.DTOs.Users;
 using SriSai.API.Services.Auth;
 using SriSai.Application.Users.Command;
 using SriSai.Application.Users.Query;
+using SriSai.Application.Users.Dtos; // Add using for UserListResponse
 using SriSai.Domain.Entity.Users;
 using System.Security.Claims;
 
@@ -202,6 +203,33 @@ namespace SriSai.API.Controllers
                     Detail = result.Errors.FirstOrDefault().Description,
                     Extensions = { ["errors"] = result.Errors.FirstOrDefault().Code }
                 }));
+        }
+
+        [HttpGet("all")]
+        [Authorize("AdminOnly")]
+        [ProducesResponseType(typeof(List<UserListDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            _logger.LogInformation("Attempting to fetch all users by Admin.");
+
+            var query = new GetAllUsersQuery();
+            List<UserListResponse> result = await _mediator.Send(query); // Handler returns List directly
+
+            // Manual mapping from Application DTO to API DTO
+            var userListDtos = result.Select(user => new UserListDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Mobile = user.Mobile,
+                Roles = user.Roles
+            }).ToList();
+
+            _logger.LogInformation("Successfully fetched {UserCount} users.", userListDtos.Count);
+            return Ok(userListDtos);
         }
     }
 }

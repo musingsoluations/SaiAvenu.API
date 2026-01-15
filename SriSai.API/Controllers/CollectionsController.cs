@@ -131,8 +131,7 @@ namespace SriSai.API.Controllers
             _logger.LogInformation($"Getting self-paid collection for {userId}");
             GetCollectionExpenseSelfQuery query = new()
             {
-                Year = year,
-                CurrentUserId = Guid.Parse(userId ?? string.Empty)
+                Year = year, CurrentUserId = Guid.Parse(userId ?? string.Empty)
             };
 
             ErrorOr<List<ChartDataItem>> result = await _mediator.Send(query);
@@ -194,13 +193,13 @@ namespace SriSai.API.Controllers
                 });
             }
 
-            var command = new PaymentReminderCommand
+            PaymentReminderCommand command = new()
             {
                 ApartmentName = dto.ApartmentName,
                 RequiredAmount = dto.RequiredAmount.ToString(),
                 RequiredFor = dto.RequiredFor,
                 ForMonth = dto.ForMonth.ToString("MMMM yyyy"),
-                PaymentDueDate = dto.PaymentDueDate.ToString("dd/MM/yyyy")
+                PaymentDueDate = dto.PaymentDueDate.ToString("dd MMM yyyy")
             };
 
             ErrorOr<Unit> result = await _mediator.Send(command);
