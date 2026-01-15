@@ -81,6 +81,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 # Create a non-root user
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
+USER app
 ENTRYPOINT ["dotnet", "SriSai.API.dll"]
