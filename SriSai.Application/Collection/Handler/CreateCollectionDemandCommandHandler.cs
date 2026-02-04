@@ -24,12 +24,13 @@ namespace SriSai.Application.Collection.Handler
         public async Task<ErrorOr<IList<Guid>>> Handle(CreateCollectionDemandCommand request,
             CancellationToken cancellationToken)
         {
-            IEnumerable<ApartmentEntity> apartmentIds =
+            var apartmentNames = request.ApartmentName.ToList();
+            IEnumerable<ApartmentEntity> apartments =
                 await _unitOfWork.Repository<ApartmentEntity>().FindAllForConditionAsync(x =>
-                    request.ApartmentName.Contains(x.ApartmentNumber));
+                    apartmentNames.Contains(x.ApartmentNumber));
 
             IEnumerable<ApartmentEntity> apartmentEntities =
-                apartmentIds as ApartmentEntity[] ?? apartmentIds.ToArray();
+                apartments as ApartmentEntity[] ?? apartments.ToArray();
             if (apartmentEntities.Any())
             {
                 await _unitOfWork.BeginTransactionAsync();
